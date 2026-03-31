@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "bunx @biomejs/biome format --write ./src ./scripts",
+    "format": "bunx @biomejs/biome check --write ./src ./scripts",
+    "build": "tsc",
     "start": "node dist/src/app.js",
+    "dev": "tsx --watch src/app.ts",
     "studio": "prisma studio"
   },
   "keywords": [],
@@ -14,7 +16,9 @@
   "type": "module",
   "devDependencies": {
     "@biomejs/biome": "2.4.9",
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
     "@types/passport": "^1.0.17",
     "@types/passport-jwt": "^4.0.1",
@@ -29,6 +33,7 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-validator": "^7.3.1",
     "jsonwebtoken": "^9.0.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

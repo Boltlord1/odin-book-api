@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import prisma from '../dist/src/lib/primsa.js'
+import prisma from '../dist/src/lib/primsa'
 
 const password = process.env.PASSWORD
 const hash = await bcrypt.hash(password, 10)

@@ -6,7 +6,14 @@
     "indentWidth": 2
   },
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": {
+      "correctness": {
+        "noUnusedImports": "off",
+        "noUnusedVariables": "off",
+        "noUnusedFunctionParameters": "off"
+      }
+    }
   },
   "assist": {
     "enabled": true
