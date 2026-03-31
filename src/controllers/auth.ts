@@ -22,10 +22,7 @@ const createUser: RequestHandler = async (req, res) => {
 		return
 	}
 
-	const { username, password, display } = matchedData<RegisterData>(req, {
-		locations: ['body'],
-		includeOptionals: false
-	})
+	const { username, password, display } = matchedData<RegisterData>(req)
 	const hash = await bcrypt.hash(password, 10)
 	const user = await prisma.user.create({
 		data: {
@@ -53,10 +50,7 @@ const logIn: RequestHandler = async (req, res) => {
 		return
 	}
 
-	const { username, password } = matchedData<LoginData>(req, {
-		locations: ['body'],
-		includeOptionals: false
-	})
+	const { username, password } = matchedData<LoginData>(req)
 
 	const user = await prisma.user.findFirst({
 		where: { name: username }

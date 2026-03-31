@@ -26,4 +26,18 @@ const display = body('display')
 	.isLength({ max: 32 })
 	.withMessage('Display name must be less than 32 characters.')
 
-export { display, password, username }
+const content = body('content')
+	.trim()
+	.notEmpty()
+	.withMessage('Missing content!')
+	.isLength({ max: 512 })
+	.withMessage('Content must be less than 512 characters.')
+
+const title = body('title')
+	.trim()
+	.notEmpty()
+	.withMessage('Missing title!')
+	.isLength({ max: 256 })
+	.withMessage('Title must be less than 256 characters.')
+
+export { content, display, password, username, title }
