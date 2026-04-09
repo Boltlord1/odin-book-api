@@ -17,12 +17,12 @@ const getPosts: RequestHandler = async (req, res) => {
 		orderBy: { createdAt: 'desc' },
 		include: {
 			author: {
-				select: { id: false, name: true, display: true, avatar: true }
+				select: { name: true, display: true, avatar: true }
 			},
 			comments: {
 				include: {
 					author: {
-						select: { id: false, name: true, display: true, avatar: true }
+						select: { name: true, display: true, avatar: true }
 					}
 				}
 			}
@@ -39,13 +39,14 @@ const createPost: RequestHandler = async (req, res) => {
 		return
 	}
 
-	const { content, title } = matchedData<PostData>(req)
+	const { content } = matchedData<PostData>(req)
 	const user = req.user as requestUser
+	const postId = req.body.id
 
-	const post = await prisma.post.create({
+	const post = await prisma.comment.create({
 		data: {
 			content,
-			title,
+			postId,
 			authorId: user.id
 		}
 	})
