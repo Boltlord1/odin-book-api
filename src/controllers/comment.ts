@@ -1,9 +1,8 @@
-import type { NextFunction, Request, RequestHandler, Response } from 'express'
+import type { RequestHandler } from 'express'
 import { matchedData, validationResult } from 'express-validator'
 import prisma from '../lib/primsa'
 
-interface PostData {
-	title: string
+interface CommentData {
 	content: string
 }
 
@@ -20,7 +19,7 @@ const createComment: RequestHandler = async (req, res) => {
 		return
 	}
 
-	const { content } = matchedData<PostData>(req)
+	const { content } = matchedData<CommentData>(req)
 	const user = req.user as requestUser
 
 	const comment = await prisma.comment.create({

@@ -49,7 +49,7 @@ const getPost: RequestHandler = async (req, res) => {
 			comments: {
 				include: {
 					author: {
-						select: { name: true, display: true, avatar: true}
+						select: { name: true, display: true, avatar: true }
 					}
 				}
 			}
