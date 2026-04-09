@@ -3,7 +3,6 @@ import express, { urlencoded } from 'express'
 import passport from 'passport'
 import { default as authRouter } from './routers/auth'
 import { default as postRouter } from './routers/post'
-import { default as commentRouter } from './routers/comment'
 
 const app = express()
 app.use(passport.initialize())
@@ -12,7 +11,6 @@ app.use(urlencoded({ extended: true }))
 
 app.use('/', authRouter)
 app.use('/post', postRouter)
-app.use('/comment', commentRouter)
 
 const port = process.env.PORT ?? '3000'
 app.listen(port, (err) => {

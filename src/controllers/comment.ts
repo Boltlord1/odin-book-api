@@ -3,7 +3,7 @@ import { matchedData, validationResult } from 'express-validator'
 import prisma from '../lib/primsa'
 
 interface PostData {
-  title: string,
+	title: string
 	content: string
 }
 
@@ -14,19 +14,19 @@ interface requestUser {
 
 const createComment: RequestHandler = async (req, res) => {
 	const errors = validationResult(req)
-	if (!errors.isEmpty() || req.user == null) {
-		res.json(errors.array())
+	const postId = req.params.id
+	if (!errors.isEmpty() || req.user == null || typeof postId !== 'string') {
+		res.json(errors.array().map((obj) => obj.msg))
 		return
 	}
 
 	const { content } = matchedData<PostData>(req)
 	const user = req.user as requestUser
-  const postId = req.body.id
 
 	const comment = await prisma.comment.create({
 		data: {
 			content,
-      postId,
+			postId,
 			authorId: user.id
 		}
 	})

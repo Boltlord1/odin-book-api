@@ -40,4 +40,4 @@ const title = body('title')
 	.isLength({ max: 256 })
 	.withMessage('Title must be less than 256 characters.')
 
-export { content, display, password, username, title }
+export { content, display, password, title, username }

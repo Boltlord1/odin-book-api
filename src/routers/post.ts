@@ -1,5 +1,6 @@
 import { Router } from 'express'
-import { createPost, getPosts } from '../controllers/post'
+import { createComment } from '../controllers/comment'
+import { createPost, getPost, getPosts } from '../controllers/post'
 import { content, title } from '../lib/validator'
 import passport from '../passport/passport'
 
@@ -12,6 +13,14 @@ router.post(
 	title,
 	content,
 	createPost
+)
+
+router.get('/:id', passport.authenticate('jwt', { session: false }), getPost)
+router.post(
+	'/:id',
+	passport.authenticate('jwt', { session: false }),
+	content,
+	createComment
 )
 
 export default router
