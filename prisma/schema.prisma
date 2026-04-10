@@ -13,13 +13,34 @@ datasource db {
 }
 
 model User {
-  id       String    @id @default(uuid()) @db.Uuid
-  hash     String    @db.VarChar(255)
-  name     String    @db.VarChar(255) @unique
-  display  String    @db.VarChar(255)
-  avatar   String    @db.VarChar(255)
+  id       String     @id @default(uuid()) @db.Uuid
+  name     String     @unique @db.VarChar(255)
+  display  String     @db.VarChar(255)
+  avatar   String     @db.VarChar(255)
   posts    Post[]
   comments Comment[]
+  local    LocalUser?
+  oauth    OauthUser?
+}
+
+model LocalUser {
+  hash   String @db.VarChar(255)
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @id @db.Uuid
+}
+
+model OauthUser {
+  provider Provider
+  id       String   @db.VarChar(255)
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String   @unique @db.Uuid
+
+  @@id(name: "providerId", [provider, id])
+}
+
+enum Provider {
+  github
+  google
 }
 
 model Post {

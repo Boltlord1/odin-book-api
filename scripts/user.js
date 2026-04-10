@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import prisma from '../dist/src/lib/primsa'
+import prisma from '../dist/src/lib/primsa.js'
 
 const password = process.env.PASSWORD
 const hash = await bcrypt.hash(password, 10)
@@ -9,7 +9,11 @@ const user = prisma.user.create({
 		name: 'boltlord',
 		display: 'Boltlord',
 		avatar: 'default',
-		hash
+		local: {
+			create: {
+				hash
+			}
+		}
 	}
 })
 
