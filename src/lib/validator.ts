@@ -4,8 +4,8 @@ const username = body('username')
 	.trim()
 	.notEmpty()
 	.withMessage('Missing username!')
-	.isLength({ min: 4, max: 32 })
-	.withMessage('Username must be between 4 and 32 characters.')
+	.isLength({ min: 2, max: 32 })
+	.withMessage('Username must be between 2 and 32 characters.')
 
 const password = body('password')
 	.trim()
@@ -18,13 +18,16 @@ const password = body('password')
 		minSymbols: 0
 	})
 	.withMessage(
-		'Password must be between 6 and 32 characters and contain at least one lower and uppercase letter and a number.'
+		'Password must be between 6 and 32 characters and contain a number, lowercase and uppercase letter.'
 	)
 
-const display = body('display')
-	.trim()
-	.isLength({ max: 32 })
-	.withMessage('Display name must be less than 32 characters.')
+function display(name: string) {
+	return body(name)
+		.trim()
+		.optional({ values: 'falsy' })
+		.isLength({ min: 2, max: 32 })
+		.withMessage('Display name must be between 2 and 32 characters.')
+}
 
 const content = body('content')
 	.trim()
