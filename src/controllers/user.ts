@@ -6,6 +6,7 @@ const getUser: RequestHandler = async (req, res) => {
 	if (typeof name !== 'string') {
 		return
 	}
+
 	const user = await prisma.user.findUnique({
 		where: {
 			name
