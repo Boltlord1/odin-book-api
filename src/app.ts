@@ -5,6 +5,7 @@ import passport from './passport/passport'
 import { default as authRouter } from './routers/auth'
 import { default as postRouter } from './routers/post'
 import { default as userRouter } from './routers/user'
+import { default as likeRouter } from './routers/like'
 
 const app = express()
 
@@ -15,6 +16,7 @@ app.use(passport.initialize())
 app.use('/auth', authRouter)
 app.use('/post', postRouter)
 app.use('/user', userRouter)
+app.use('/like', likeRouter)
 
 const port = process.env.PORT ?? '3000'
 app.listen(port, (err) => {

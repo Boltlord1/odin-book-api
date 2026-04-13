@@ -11,11 +11,21 @@ const getPosts: RequestHandler = async (req, res) => {
 	const posts = await prisma.post.findMany({
 		orderBy: { createdAt: 'desc' },
 		include: {
+			_count: {
+				select: {
+					likedBy: true
+				}
+			},
 			author: {
 				select: { name: true, display: true, avatar: true }
 			},
 			comments: {
 				include: {
+					_count: {
+						select: {
+							likedBy: true
+						}
+					},
 					author: {
 						select: { name: true, display: true, avatar: true }
 					}
@@ -57,7 +67,7 @@ const getPost: RequestHandler = async (req, res) => {
 
 const createPost: RequestHandler = async (req, res) => {
 	const user = req.user
-	if (!user || !user.id) {
+	if (!user) {
 		res.json(false)
 		return
 	}

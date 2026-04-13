@@ -17,10 +17,12 @@ model User {
   name     String     @unique @db.VarChar(255)
   display  String     @db.VarChar(255)
   avatar   String     @db.VarChar(255)
-  posts    Post[]
+  posts    Post[] @relation("author")
   comments Comment[]
   local    LocalUser?
   oauth    OauthUser?
+  likedPosts Post[] @relation("liked_posts")
+  likedComments Comment[] @relation("liked_comments")
 }
 
 model LocalUser {
@@ -48,9 +50,10 @@ model Post {
   title     String    @db.VarChar(255)
   content   String    @db.Text
   createdAt DateTime  @default(now())
-  author    User      @relation(fields: [authorId], references: [id])
+  author    User      @relation("author", fields: [authorId], references: [id])
   authorId  String    @db.Uuid
   comments  Comment[]
+  likedBy User[] @relation("liked_posts")
 }
 
 model Comment {
@@ -61,4 +64,5 @@ model Comment {
   authorId  String   @db.Uuid
   post      Post     @relation(fields: [postId], references: [id])
   postId    String   @db.Uuid
+  likedBy User[] @relation("liked_comments")
 }
