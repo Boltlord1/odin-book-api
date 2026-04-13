@@ -1,6 +1,6 @@
 import { type Profile, Strategy, type StrategyOptions } from 'passport-github2'
 import type { VerifyCallback, VerifyFunction } from 'passport-oauth2'
-import type { User } from '../lib/interfaces'
+import type { Identity } from '../lib/interfaces'
 import prisma from '../lib/primsa'
 
 const clientID = `${process.env.GITHUB_CLIENT_ID}`
@@ -28,21 +28,23 @@ const verifyCallback: VerifyFunction = async (
 	})
 
 	if (existingUser !== null) {
-		const user: User = {
+		const identity: Identity = {
 			id: existingUser.userId,
 			exists: true
 		}
 
-		done(null, user)
+		done(null, identity as unknown as Express.User)
 		return
 	}
 
-	const user: User = {
+	const avatar = profile.photos?.[0] ? profile.photos[0].value : 'default'
+	const identity: Identity = {
 		id: profile.id,
+		avatar,
 		exists: false
 	}
 
-	done(null, user)
+	done(null, identity as unknown as Express.User)
 }
 
 const strategy = new Strategy(options, verifyCallback)

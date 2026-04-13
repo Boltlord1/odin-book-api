@@ -7,7 +7,8 @@ interface CommentData {
 }
 
 const createComment: RequestHandler = async (req, res) => {
-	if (!req.user) {
+	const user = req.user
+	if (!user) {
 		res.json(false)
 		return
 	}
@@ -19,7 +20,6 @@ const createComment: RequestHandler = async (req, res) => {
 	}
 
 	const { content } = matchedData<CommentData>(req)
-	const user = req.user
 
 	const comment = await prisma.comment.create({
 		data: {

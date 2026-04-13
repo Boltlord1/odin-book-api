@@ -56,13 +56,13 @@ const getPost: RequestHandler = async (req, res) => {
 }
 
 const createPost: RequestHandler = async (req, res) => {
-	if (!req.user) {
+	const user = req.user
+	if (!user || !user.id) {
 		res.json(false)
 		return
 	}
 
 	const { title, content } = matchedData<PostData>(req)
-	const user = req.user
 
 	const post = await prisma.post.create({
 		data: {

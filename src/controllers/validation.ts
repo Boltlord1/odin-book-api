@@ -1,7 +1,9 @@
+import { Buffer } from 'node:buffer'
 import type { Request, RequestHandler } from 'express'
 import { validationResult } from 'express-validator'
 import multer, { type Field } from 'multer'
-import type { ReqError } from '../lib/interfaces'
+import cloudinary from '../lib/cloudinary'
+import type { AvatarRequest, ReqError } from '../lib/interfaces'
 
 interface ErrorRequest extends Request {
 	sizeError?: ReqError | undefined
@@ -69,4 +71,47 @@ const validateData: RequestHandler = async (req: ErrorRequest, res, next) => {
 	next()
 }
 
-export { parseForm, validateData }
+const uploadImage: RequestHandler = async (req: AvatarRequest, res, next) => {
+	const file = req.file
+	if (!file) {
+		next()
+		return
+	}
+
+	const folder = `${process.env.CLOUD_FOLDER}`
+	const b64 = Buffer.from(file.buffer).toString('base64')
+	const dataURI = `data:${file.mimetype};base64,${b64}`
+
+	try {
+		const response = await cloudinary.uploader.upload(dataURI, {
+			folder,
+			resource_type: 'auto'
+		})
+		req.avatar = response.public_id
+	} catch (err) {
+		const error: ReqError = {
+			type: 'server',
+			name: 'cloudinary',
+			msg: 'Error uploading avatar.'
+		}
+		res.json('asd')
+	}
+
+	next()
+}
+
+const uploadAuto: RequestHandler = async (req: AvatarRequest, res, next) => {
+	const user = req.payload
+	const avatar = user.avatar
+
+	const folder = `${process.env.CLOUD_FOLDER}`
+	const response = await cloudinary.uploader.upload(avatar, {
+		folder,
+		resource_type: 'auto'
+	})
+	req.avatar = response.public_id
+
+	next()
+}
+
+export { parseForm, uploadAuto, uploadImage, validateData }

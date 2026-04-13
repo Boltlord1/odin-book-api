@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import type { Provider } from '../../generated/prisma/enums'
+import type { AvatarRequest } from '../lib/interfaces'
 import { issueJwt, issueTempJwt, type TempPayload } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
 
@@ -21,7 +22,8 @@ interface OauthData {
 	display: string
 }
 
-const createUser: RequestHandler = async (req, res) => {
+const createUser: RequestHandler = async (req: AvatarRequest, res) => {
+	const avatar = req.avatar || 'default'
 	const { username, password, display } = matchedData<RegisterData>(req)
 	const hash = await bcrypt.hash(password, 10)
 	const user = await prisma.localUser.create({
@@ -31,7 +33,7 @@ const createUser: RequestHandler = async (req, res) => {
 				create: {
 					name: username,
 					display,
-					avatar: 'default'
+					avatar
 				}
 			}
 		}
@@ -78,7 +80,7 @@ const oauthCallback = (provider: Provider) => {
 			return
 		}
 
-		const token = issueTempJwt(identity.id, provider)
+		const token = issueTempJwt(identity.id, identity.avatar, provider)
 		res.json(token)
 	}
 
@@ -86,8 +88,9 @@ const oauthCallback = (provider: Provider) => {
 }
 
 const oauthRegister = (provider: Provider) => {
-	const createUser: RequestHandler = async (req, res) => {
+	const createUser: RequestHandler = async (req: AvatarRequest, res) => {
 		const payload = req.payload
+		const avatar = req.avatar || 'default'
 		if (payload.provider !== provider) {
 			res.json(null)
 			return
@@ -102,7 +105,7 @@ const oauthRegister = (provider: Provider) => {
 					create: {
 						name: username,
 						display,
-						avatar: 'default'
+						avatar
 					}
 				}
 			}

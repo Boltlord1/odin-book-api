@@ -4,7 +4,7 @@ import {
 	type StrategyOptions,
 	type VerifyCallback
 } from 'passport-google-oauth20'
-import type { User } from '../lib/interfaces'
+import type { Identity } from '../lib/interfaces'
 import prisma from '../lib/primsa'
 
 const clientID = `${process.env.GOOGLE_CLIENT_ID}`
@@ -22,8 +22,6 @@ const verifyCallback = async (
 	profile: Profile,
 	done: VerifyCallback
 ) => {
-	console.log(profile)
-	console.log(profile.id)
 	const existingUser = await prisma.oauthUser.findUnique({
 		where: {
 			providerId: {
@@ -34,21 +32,23 @@ const verifyCallback = async (
 	})
 
 	if (existingUser !== null) {
-		const user: User = {
+		const identity: Identity = {
 			id: existingUser.userId,
 			exists: true
 		}
 
-		done(null, user)
+		done(null, identity as unknown as Express.User)
 		return
 	}
 
-	const user: User = {
+	const avatar = profile.photos?.[0] ? profile.photos[0].value : 'default'
+	const identity: Identity = {
 		id: profile.id,
+		avatar,
 		exists: false
 	}
 
-	done(null, user)
+	done(null, identity as unknown as Express.User)
 }
 
 const strategy = new Strategy(options, verifyCallback)

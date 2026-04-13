@@ -1,12 +1,6 @@
 import type { User as PrismaUser } from '../../generated/prisma/client'
 import type { TempPayload } from '../lib/issueJwt'
-
-type AuthenticatedUser = PrismaUser
-
-interface Identity {
-	id: string
-	exists: boolean
-}
+import type { Identity } from '../lib/interfaces'
 
 declare global {
 	namespace Express {

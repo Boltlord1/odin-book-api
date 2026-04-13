@@ -21,9 +21,11 @@ function issueJwt(id: string) {
 	}
 }
 
-function issueTempJwt(id: string, provider: Provider) {
+function issueTempJwt(id: string, avatar: string, provider: Provider) {
+	console.log(avatar)
 	const payload = {
 		sub: id,
+		avatar,
 		type: 'temp',
 		provider,
 		iat: Date.now()
@@ -48,6 +50,7 @@ interface LoginPayload {
 
 interface TempPayload {
 	sub: string
+	avatar: string
 	type: 'temp'
 	provider: Provider
 	iat: number
