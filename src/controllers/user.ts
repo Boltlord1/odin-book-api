@@ -12,6 +12,12 @@ const getUser: RequestHandler = async (req, res) => {
 			name
 		},
 		select: {
+			_count: {
+				select: {
+					follows: true,
+					followers: true
+				}
+			},
 			name: true,
 			display: true,
 			avatar: true,

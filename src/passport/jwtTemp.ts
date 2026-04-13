@@ -2,8 +2,8 @@ import {
 	ExtractJwt,
 	type WithSecretOrKey as Options,
 	Strategy,
-	type VerifyCallback,
-	type VerifiedCallback
+	type VerifiedCallback,
+	type VerifyCallback
 } from 'passport-jwt'
 import type { Payload } from '../lib/issueJwt'
 
@@ -15,7 +15,10 @@ const options: Options = {
 	algorithms: ['RS256']
 }
 
-const verifyCallback: VerifyCallback = async (payload: Payload, done: VerifiedCallback) => {
+const verifyCallback: VerifyCallback = async (
+	payload: Payload,
+	done: VerifiedCallback
+) => {
 	if (payload.type !== 'temp') return done(null, false)
 	return done(null, payload)
 }

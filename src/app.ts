@@ -3,9 +3,10 @@ import cors from 'cors'
 import express, { urlencoded } from 'express'
 import passport from './passport/passport'
 import { default as authRouter } from './routers/auth'
+import { default as followRouter } from './routers/follow'
+import { default as likeRouter } from './routers/like'
 import { default as postRouter } from './routers/post'
 import { default as userRouter } from './routers/user'
-import { default as likeRouter } from './routers/like'
 
 const app = express()
 
@@ -17,6 +18,7 @@ app.use('/auth', authRouter)
 app.use('/post', postRouter)
 app.use('/user', userRouter)
 app.use('/like', likeRouter)
+app.use('/follow', followRouter)
 
 const port = process.env.PORT ?? '3000'
 app.listen(port, (err) => {

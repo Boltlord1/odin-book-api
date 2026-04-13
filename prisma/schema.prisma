@@ -23,6 +23,8 @@ model User {
   oauth    OauthUser?
   likedPosts Post[] @relation("liked_posts")
   likedComments Comment[] @relation("liked_comments")
+  follows User[] @relation("follows")
+  followers User[] @relation("follows")
 }
 
 model LocalUser {

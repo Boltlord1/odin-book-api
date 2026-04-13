@@ -14,7 +14,26 @@ interface UpdateData {
 }
 
 const getSelf: RequestHandler = async (req, res) => {
-	res.json(req.user)
+	const user = req.user
+	if (!user) {
+		res.json('unauthorized')
+		return
+	}
+
+	const self = await prisma.user.findUnique({
+		where: {
+			id: user.id
+		},
+		include: {
+			_count: {
+				select: {
+					follows: true,
+					followers: true
+				}
+			}
+		}
+	})
+	res.json(self)
 }
 
 const updateUser: RequestHandler = async (req, res) => {

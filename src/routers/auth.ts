@@ -5,7 +5,12 @@ import {
 	oauthCallback,
 	oauthRegister
 } from '../controllers/auth'
-import { parseForm, uploadImage, uploadAuto, validateData } from '../controllers/validation'
+import {
+	parseForm,
+	uploadAuto,
+	uploadImage,
+	validateData
+} from '../controllers/validation'
 import { display, password, username } from '../lib/validator'
 import { callbackOptions, registerOptions } from '../passport/options'
 import passport from '../passport/passport'
