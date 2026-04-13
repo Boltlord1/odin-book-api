@@ -1,15 +1,10 @@
 import type { RequestHandler } from 'express'
-import { matchedData, validationResult } from 'express-validator'
+import { matchedData } from 'express-validator'
 import prisma from '../lib/primsa'
 
 interface PostData {
 	title: string
 	content: string
-}
-
-interface requestUser {
-	id: string
-	iat: number
 }
 
 const getPosts: RequestHandler = async (req, res) => {
@@ -38,6 +33,7 @@ const getPost: RequestHandler = async (req, res) => {
 		res.json(false)
 		return
 	}
+
 	const post = await prisma.post.findUnique({
 		where: {
 			id
@@ -60,20 +56,18 @@ const getPost: RequestHandler = async (req, res) => {
 }
 
 const createPost: RequestHandler = async (req, res) => {
-	const errors = validationResult(req)
-	if (!errors.isEmpty() || req.user == null) {
-		res.json(errors.array())
+	if (!req.user) {
+		res.json(false)
 		return
 	}
 
-	const { content } = matchedData<PostData>(req)
-	const user = req.user as requestUser
-	const postId = req.body.id
+	const { title, content } = matchedData<PostData>(req)
+	const user = req.user
 
-	const post = await prisma.comment.create({
+	const post = await prisma.post.create({
 		data: {
+			title,
 			content,
-			postId,
 			authorId: user.id
 		}
 	})

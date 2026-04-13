@@ -5,25 +5,35 @@ import {
 	oauthCallback,
 	oauthRegister
 } from '../controllers/auth'
+import { parseForm, validateData } from '../controllers/validation'
 import { display, password, username } from '../lib/validator'
+import { callbackOptions, registerOptions } from '../passport/options'
 import passport from '../passport/passport'
 
 const router = Router()
 
-router.post('/register', username, password, display('display'), createUser)
-router.post('/login', username, password, logIn)
+router.post(
+	'/register',
+	username,
+	password,
+	display('display'),
+	validateData,
+	createUser
+)
+router.post('/login', username, password, validateData, logIn)
 
 router.get('/github', passport.authenticate('github', { session: false }))
 router.get(
 	'/github/callback',
-	passport.authenticate('github', { session: false }),
+	passport.authenticate('github', callbackOptions),
 	oauthCallback('github')
 )
 router.post(
 	'/github/register',
-	passport.authenticate('jwt-temp', { session: false }),
+	passport.authenticate('jwt-temp', registerOptions),
 	username,
 	display('display'),
+	validateData,
 	oauthRegister('github')
 )
 
@@ -36,14 +46,15 @@ router.get(
 )
 router.get(
 	'/google/callback',
-	passport.authenticate('google', { session: false }),
+	passport.authenticate('google', callbackOptions),
 	oauthCallback('google')
 )
 router.post(
 	'/google/register',
-	passport.authenticate('jwt-temp', { session: false }),
+	passport.authenticate('jwt-temp', registerOptions),
 	username,
 	display('display'),
+	validateData,
 	oauthRegister('google')
 )
 

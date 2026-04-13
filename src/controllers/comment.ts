@@ -1,26 +1,25 @@
 import type { RequestHandler } from 'express'
-import { matchedData, validationResult } from 'express-validator'
+import { matchedData } from 'express-validator'
 import prisma from '../lib/primsa'
 
 interface CommentData {
 	content: string
 }
 
-interface requestUser {
-	id: string
-	iat: number
-}
-
 const createComment: RequestHandler = async (req, res) => {
-	const errors = validationResult(req)
+	if (!req.user) {
+		res.json(false)
+		return
+	}
+
 	const postId = req.params.id
-	if (!errors.isEmpty() || req.user == null || typeof postId !== 'string') {
-		res.json(errors.array().map((obj) => obj.msg))
+	if (typeof postId !== 'string') {
+		res.json({ msg: 'post not found' })
 		return
 	}
 
 	const { content } = matchedData<CommentData>(req)
-	const user = req.user as requestUser
+	const user = req.user
 
 	const comment = await prisma.comment.create({
 		data: {

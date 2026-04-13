@@ -1,8 +1,7 @@
 import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
-import { matchedData, validationResult } from 'express-validator'
+import { matchedData } from 'express-validator'
 import type { Provider } from '../../generated/prisma/enums'
-import type { User } from '../lib/interfaces'
 import { issueJwt, issueTempJwt, type TempPayload } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
 
@@ -23,12 +22,6 @@ interface OauthData {
 }
 
 const createUser: RequestHandler = async (req, res) => {
-	const errors = validationResult(req)
-	if (!errors.isEmpty()) {
-		res.json(errors.array())
-		return
-	}
-
 	const { username, password, display } = matchedData<RegisterData>(req)
 	const hash = await bcrypt.hash(password, 10)
 	const user = await prisma.localUser.create({
@@ -55,14 +48,7 @@ const createUser: RequestHandler = async (req, res) => {
 }
 
 const logIn: RequestHandler = async (req, res) => {
-	const errors = validationResult(req)
-	if (!errors.isEmpty()) {
-		res.json(errors.array())
-		return
-	}
-
 	const { username, password } = matchedData<LoginData>(req)
-
 	const user = await prisma.user.findUnique({
 		where: { name: username },
 		include: {
@@ -85,14 +71,14 @@ const logIn: RequestHandler = async (req, res) => {
 
 const oauthCallback = (provider: Provider) => {
 	const verifyFunction: RequestHandler = async (req, res) => {
-		const user = req.user as User
-		if (user.exists) {
-			const token = issueJwt(user.id)
+		const identity = req.identity
+		if (identity.exists) {
+			const token = issueJwt(identity.id)
 			res.json(token)
 			return
 		}
 
-		const token = issueTempJwt(user.id, provider)
+		const token = issueTempJwt(identity.id, provider)
 		res.json(token)
 	}
 
@@ -101,13 +87,7 @@ const oauthCallback = (provider: Provider) => {
 
 const oauthRegister = (provider: Provider) => {
 	const createUser: RequestHandler = async (req, res) => {
-		const errors = validationResult(req)
-		if (!errors.isEmpty()) {
-			res.json(errors.array())
-			return
-		}
-
-		const payload = req.user as TempPayload
+		const payload = req.payload
 		if (payload.provider !== provider) {
 			res.json(null)
 			return

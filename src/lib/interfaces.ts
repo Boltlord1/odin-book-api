@@ -1,6 +1,9 @@
-interface User {
-	id: string
-	exists: boolean
+import type { Request } from 'express'
+
+interface ReqError {
+	type: 'client' | 'server'
+	name: string
+	msg: string
 }
 
-export type { User }
+export type { ReqError }

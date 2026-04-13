@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { createComment } from '../controllers/comment'
 import { createPost, getPost, getPosts } from '../controllers/post'
+import { parseForm, validateData } from '../controllers/validation'
 import { content, title } from '../lib/validator'
 import passport from '../passport/passport'
 
@@ -12,6 +13,7 @@ router.post(
 	passport.authenticate('jwt', { session: false }),
 	title,
 	content,
+	validateData,
 	createPost
 )
 
@@ -20,6 +22,7 @@ router.post(
 	'/:id',
 	passport.authenticate('jwt', { session: false }),
 	content,
+	validateData,
 	createComment
 )
 
