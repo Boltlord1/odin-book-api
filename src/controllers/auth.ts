@@ -2,15 +2,9 @@ import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import type { Provider } from '../../generated/prisma/enums'
-import type { AvatarRequest } from '../lib/interfaces'
+import type { AvatarRequest, UserIdRequest } from '../lib/interfaces'
 import { issueJwt, issueTempJwt, type TempPayload } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
-
-interface RegisterData {
-	username: string
-	password: string
-	display: string
-}
 
 interface LoginData {
 	username: string
@@ -22,31 +16,14 @@ interface OauthData {
 	display: string
 }
 
-const createUser: RequestHandler = async (req: AvatarRequest, res) => {
-	const avatar = req.avatar || 'default'
-	const { username, password, display } = matchedData<RegisterData>(req)
-	const hash = await bcrypt.hash(password, 10)
-	const user = await prisma.localUser.create({
-		data: {
-			hash,
-			user: {
-				create: {
-					name: username,
-					display,
-					avatar
-				}
-			}
-		}
-	})
-
-	try {
-		const token = issueJwt(user.userId)
-		res.json(token.token)
-	} catch (error) {
-		await prisma.user.delete({ where: { id: user.userId } })
-		console.log(error)
+const signIn: RequestHandler = async (req: UserIdRequest, res) => {
+	const id = req.userId
+	if (!id) {
 		res.json(false)
+		return
 	}
+	const token = issueJwt(id)
+	res.json(token.token)
 }
 
 const logIn: RequestHandler = async (req, res) => {
@@ -118,4 +95,4 @@ const oauthRegister = (provider: Provider) => {
 	return createUser
 }
 
-export { createUser, logIn, oauthCallback, oauthRegister }
+export { logIn, oauthCallback, oauthRegister, signIn }

@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import {
-	createUser,
 	logIn,
 	oauthCallback,
-	oauthRegister
+	oauthRegister,
+	signIn
 } from '../controllers/auth'
+import { createUser } from '../controllers/user'
 import {
 	parseForm,
 	uploadAuto,
@@ -24,8 +25,9 @@ router.post(
 	password,
 	display('display'),
 	validateData,
+	createUser,
 	uploadImage,
-	createUser
+	signIn
 )
 router.post('/login', username, password, validateData, logIn)
 

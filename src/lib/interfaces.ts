@@ -4,6 +4,10 @@ interface AvatarRequest extends Request {
 	avatar?: string
 }
 
+interface UserIdRequest extends Request {
+	userId?: string
+}
+
 interface ReqError {
 	type: 'client' | 'server'
 	name: string
@@ -23,4 +27,4 @@ interface NotExists {
 
 type Identity = Exists | NotExists
 
-export type { AvatarRequest, Identity, ReqError }
+export type { AvatarRequest, Identity, ReqError, UserIdRequest }

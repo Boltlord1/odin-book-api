@@ -2,8 +2,10 @@ import { Buffer } from 'node:buffer'
 import type { Request, RequestHandler } from 'express'
 import { validationResult } from 'express-validator'
 import multer, { type Field } from 'multer'
+import { UserScalarFieldEnum } from '../../generated/prisma/internal/prismaNamespace'
 import cloudinary from '../lib/cloudinary'
-import type { AvatarRequest, ReqError } from '../lib/interfaces'
+import type { AvatarRequest, ReqError, UserIdRequest } from '../lib/interfaces'
+import prisma from '../lib/primsa'
 
 interface ErrorRequest extends Request {
 	sizeError?: ReqError | undefined
@@ -71,7 +73,13 @@ const validateData: RequestHandler = async (req: ErrorRequest, res, next) => {
 	next()
 }
 
-const uploadImage: RequestHandler = async (req: AvatarRequest, res, next) => {
+const uploadImage: RequestHandler = async (req: UserIdRequest, res, next) => {
+	const id = req.userId
+	if (!id) {
+		res.json(false)
+		return
+	}
+
 	const file = req.file
 	if (!file) {
 		next()
@@ -87,7 +95,10 @@ const uploadImage: RequestHandler = async (req: AvatarRequest, res, next) => {
 			folder,
 			resource_type: 'auto'
 		})
-		req.avatar = response.public_id
+		await prisma.user.update({
+			where: { id },
+			data: { avatar: response.public_id }
+		})
 	} catch (err) {
 		const error: ReqError = {
 			type: 'server',
