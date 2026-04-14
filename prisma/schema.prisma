@@ -60,8 +60,8 @@ model Post {
 }
 
 model Image {
-  id        String @id
-  public_id String @unique
+  id        String @id @db.Uuid @default(uuid())
+  publicId  String @unique @db.VarChar(255)
   post      Post   @relation(fields: [postId], references: [id])
   postId    String @db.Uuid
 }

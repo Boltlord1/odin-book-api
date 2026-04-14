@@ -1,13 +1,5 @@
 import type { Request } from 'express'
 
-interface AvatarRequest extends Request {
-	avatar?: string
-}
-
-interface UserIdRequest extends Request {
-	userId?: string
-}
-
 interface ReqError {
 	type: 'client' | 'server'
 	name: string
@@ -27,4 +19,27 @@ interface NotExists {
 
 type Identity = Exists | NotExists
 
-export type { AvatarRequest, Identity, ReqError, UserIdRequest }
+interface AvatarRequest extends Request {
+	avatar?: string
+}
+
+interface UserIdRequest extends Request {
+	userId?: string
+}
+
+interface PostRequest extends Request {
+	postId?: string
+}
+
+interface ErrorRequest extends Request {
+	sizeError?: ReqError | undefined
+}
+
+export type {
+	AvatarRequest,
+	ErrorRequest,
+	Identity,
+	PostRequest,
+	ReqError,
+	UserIdRequest
+}

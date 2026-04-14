@@ -1,21 +1,22 @@
 import { Buffer } from 'node:buffer'
 import type { Request, RequestHandler } from 'express'
 import { validationResult } from 'express-validator'
-import multer, { type Field } from 'multer'
+import multer from 'multer'
 import cloudinary from '../lib/cloudinary'
-import type { AvatarRequest, ReqError, UserIdRequest } from '../lib/interfaces'
+import type {
+	AvatarRequest,
+	ErrorRequest,
+	ReqError,
+	UserIdRequest
+} from '../lib/interfaces'
 import prisma from '../lib/primsa'
-
-interface ErrorRequest extends Request {
-	sizeError?: ReqError | undefined
-}
 
 const upload = multer({
 	storage: multer.memoryStorage(),
 	limits: { fileSize: 5 * 1024 * 1024 }
 }).single('avatar')
 
-const parseForm: RequestHandler = async (req: ErrorRequest, res, next) => {
+const parseAvatar: RequestHandler = async (req: ErrorRequest, res, next) => {
 	upload(req, res, (err) => {
 		if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
 			const error: ReqError = {
@@ -47,6 +48,21 @@ const validateData: RequestHandler = async (req: ErrorRequest, res, next) => {
 				msg: 'Avatar file type must be png or jpeg.'
 			}
 			errors.push(error)
+		}
+	}
+
+	const files = req.files
+	if (files && Array.isArray(files)) {
+		const regexp = /image\/(jpeg|jpg|png|gif)/
+		for (const file of files) {
+			if (!regexp.test(file.mimetype)) {
+				const error: ReqError = {
+					type: 'client',
+					name: 'avatar',
+					msg: 'Image file type must be png, jpeg or gif.'
+				}
+				errors.push(error)
+			}
 		}
 	}
 
@@ -162,4 +178,4 @@ const updateAvatar: RequestHandler = async (req, res) => {
 	}
 }
 
-export { parseForm, updateAvatar, uploadAuto, uploadAvatar, validateData }
+export { parseAvatar, updateAvatar, uploadAuto, uploadAvatar, validateData }

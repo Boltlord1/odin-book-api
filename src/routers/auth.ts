@@ -7,7 +7,7 @@ import {
 } from '../controllers/auth'
 import { createUser } from '../controllers/user'
 import {
-	parseForm,
+	parseAvatar,
 	updateAvatar,
 	uploadAuto,
 	uploadAvatar,
@@ -25,7 +25,7 @@ const router = Router()
 
 router.post(
 	'/register',
-	parseForm,
+	parseAvatar,
 	username,
 	password,
 	display('display'),
@@ -45,7 +45,7 @@ router.get(
 router.post(
 	'/github/register',
 	passport.authenticate('jwt-temp', registerOptions),
-	parseForm,
+	parseAvatar,
 	username,
 	display('display'),
 	validateData,
@@ -68,7 +68,7 @@ router.get(
 router.post(
 	'/google/register',
 	passport.authenticate('jwt-temp', registerOptions),
-	parseForm,
+	parseAvatar,
 	username,
 	display('display'),
 	validateData,
@@ -79,7 +79,7 @@ router.post(
 router.put(
 	'/avatar',
 	passport.authenticate('jwt', standardOptions),
-	parseForm,
+	parseAvatar,
 	updateAvatar
 )
 
