@@ -13,18 +13,18 @@ datasource db {
 }
 
 model User {
-  id       String     @id @default(uuid()) @db.Uuid
-  name     String     @unique @db.VarChar(255)
-  display  String     @db.VarChar(255)
-  avatar   String     @db.VarChar(255)
-  posts    Post[] @relation("author")
-  comments Comment[]
-  local    LocalUser?
-  oauth    OauthUser?
-  likedPosts Post[] @relation("liked_posts")
-  likedComments Comment[] @relation("liked_comments")
-  follows User[] @relation("follows")
-  followers User[] @relation("follows")
+  id            String     @id @default(uuid()) @db.Uuid
+  name          String     @unique @db.VarChar(255)
+  display       String     @db.VarChar(255)
+  avatar        String     @db.VarChar(255)
+  posts         Post[]     @relation("author")
+  comments      Comment[]
+  local         LocalUser?
+  oauth         OauthUser?
+  likedPosts    Post[]     @relation("liked_posts")
+  likedComments Comment[]  @relation("liked_comments")
+  follows       User[]     @relation("follows")
+  followers     User[]     @relation("follows")
 }
 
 model LocalUser {
@@ -55,7 +55,15 @@ model Post {
   author    User      @relation("author", fields: [authorId], references: [id])
   authorId  String    @db.Uuid
   comments  Comment[]
-  likedBy User[] @relation("liked_posts")
+  likedBy   User[]    @relation("liked_posts")
+  images    Image[]
+}
+
+model Image {
+  id        String @id
+  public_id String @unique
+  post      Post   @relation(fields: [postId], references: [id])
+  postId    String @db.Uuid
 }
 
 model Comment {
@@ -66,5 +74,5 @@ model Comment {
   authorId  String   @db.Uuid
   post      Post     @relation(fields: [postId], references: [id])
   postId    String   @db.Uuid
-  likedBy User[] @relation("liked_comments")
+  likedBy   User[]   @relation("liked_comments")
 }

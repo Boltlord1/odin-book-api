@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { getSelf, updateUser } from '../controllers/accounts'
-import { getUser } from '../controllers/user'
+import { updateUser } from '../controllers/accounts'
+import { getSelf, getUser } from '../controllers/user'
 import { display } from '../lib/validator'
 import passport from '../passport/passport'
 

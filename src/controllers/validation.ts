@@ -2,7 +2,6 @@ import { Buffer } from 'node:buffer'
 import type { Request, RequestHandler } from 'express'
 import { validationResult } from 'express-validator'
 import multer, { type Field } from 'multer'
-import { UserScalarFieldEnum } from '../../generated/prisma/internal/prismaNamespace'
 import cloudinary from '../lib/cloudinary'
 import type { AvatarRequest, ReqError, UserIdRequest } from '../lib/interfaces'
 import prisma from '../lib/primsa'
@@ -73,7 +72,7 @@ const validateData: RequestHandler = async (req: ErrorRequest, res, next) => {
 	next()
 }
 
-const uploadImage: RequestHandler = async (req: UserIdRequest, res, next) => {
+const uploadAvatar: RequestHandler = async (req: UserIdRequest, res, next) => {
 	const id = req.userId
 	if (!id) {
 		res.json(false)
@@ -86,7 +85,7 @@ const uploadImage: RequestHandler = async (req: UserIdRequest, res, next) => {
 		return
 	}
 
-	const folder = `${process.env.CLOUD_FOLDER}`
+	const folder = `${process.env.AVATAR_FOLDER}`
 	const b64 = Buffer.from(file.buffer).toString('base64')
 	const dataURI = `data:${file.mimetype};base64,${b64}`
 
@@ -105,7 +104,7 @@ const uploadImage: RequestHandler = async (req: UserIdRequest, res, next) => {
 			name: 'cloudinary',
 			msg: 'Error uploading avatar.'
 		}
-		res.json('asd')
+		res.json(error)
 	}
 
 	next()
@@ -115,7 +114,7 @@ const uploadAuto: RequestHandler = async (req: AvatarRequest, res, next) => {
 	const user = req.payload
 	const avatar = user.avatar
 
-	const folder = `${process.env.CLOUD_FOLDER}`
+	const folder = `${process.env.AVATAR_FOLDER}`
 	const response = await cloudinary.uploader.upload(avatar, {
 		folder,
 		resource_type: 'auto'
@@ -125,4 +124,42 @@ const uploadAuto: RequestHandler = async (req: AvatarRequest, res, next) => {
 	next()
 }
 
-export { parseForm, uploadAuto, uploadImage, validateData }
+const updateAvatar: RequestHandler = async (req, res) => {
+	const user = req.user
+	if (!user) {
+		res.json(false)
+		return
+	}
+
+	const file = req.file
+	if (!file) {
+		res.json(false)
+		return
+	}
+
+	const folder = `${process.env.AVATAR_FOLDER}`
+	const b64 = Buffer.from(file.buffer).toString('base64')
+	const dataURI = `data:${file.mimetype};base64,${b64}`
+
+	try {
+		const response = await cloudinary.uploader.upload(dataURI, {
+			folder,
+			resource_type: 'auto'
+		})
+		await prisma.user.update({
+			where: { id: user.id },
+			data: { avatar: response.public_id }
+		})
+		await cloudinary.uploader.destroy(user.avatar)
+		res.json(true)
+	} catch (err) {
+		const error: ReqError = {
+			type: 'server',
+			name: 'cloudinary',
+			msg: 'Error uploading avatar.'
+		}
+		res.json(error)
+	}
+}
+
+export { parseForm, updateAvatar, uploadAuto, uploadAvatar, validateData }

@@ -8,12 +8,17 @@ import {
 import { createUser } from '../controllers/user'
 import {
 	parseForm,
+	updateAvatar,
 	uploadAuto,
-	uploadImage,
+	uploadAvatar,
 	validateData
 } from '../controllers/validation'
 import { display, password, username } from '../lib/validator'
-import { callbackOptions, registerOptions } from '../passport/options'
+import {
+	callbackOptions,
+	registerOptions,
+	standardOptions
+} from '../passport/options'
 import passport from '../passport/passport'
 
 const router = Router()
@@ -26,7 +31,7 @@ router.post(
 	display('display'),
 	validateData,
 	createUser,
-	uploadImage,
+	uploadAvatar,
 	signIn
 )
 router.post('/login', username, password, validateData, logIn)
@@ -69,6 +74,13 @@ router.post(
 	validateData,
 	uploadAuto,
 	oauthRegister('google')
+)
+
+router.put(
+	'/avatar',
+	passport.authenticate('jwt', standardOptions),
+	parseForm,
+	updateAvatar
 )
 
 export default router

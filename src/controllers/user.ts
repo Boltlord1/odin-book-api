@@ -51,6 +51,21 @@ const getUser: RequestHandler = async (req, res) => {
 	res.json(user)
 }
 
+const getSelf: RequestHandler = async (req, res) => {
+	const user = req.user
+	if (!user) {
+		res.json('unauthorized')
+		return
+	}
+
+	const self = await prisma.user.findUnique({
+		where: {
+			id: user.id
+		}
+	})
+	res.json(self)
+}
+
 const createUser: RequestHandler = async (req: UserIdRequest, res, next) => {
 	const { username, password, display } = matchedData<RegisterData>(req)
 	const hash = await bcrypt.hash(password, 10)
@@ -76,4 +91,4 @@ const createUser: RequestHandler = async (req: UserIdRequest, res, next) => {
 	next()
 }
 
-export { createUser, getUser }
+export { createUser, getSelf, getUser }
