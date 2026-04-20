@@ -15,10 +15,7 @@ function issueJwt(id: string) {
 		algorithm: 'RS256'
 	})
 
-	return {
-		token: `Bearer ${token}`,
-		expires: '7d'
-	}
+	return token
 }
 
 function issueTempJwt(id: string, avatar: string, provider: Provider) {

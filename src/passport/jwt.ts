@@ -1,16 +1,16 @@
 import {
-	ExtractJwt,
 	type WithSecretOrKey as Options,
 	Strategy,
 	type VerifyCallback
 } from 'passport-jwt'
+import cookieExtractor from '../lib/cookie'
 import type { Payload } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
 
 const PUB_KEY = `${process.env.PUB_KEY}`.replace(/\\n/g, '\n')
 
 const options: Options = {
-	jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+	jwtFromRequest: cookieExtractor,
 	secretOrKey: PUB_KEY,
 	algorithms: ['RS256']
 }

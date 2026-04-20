@@ -2,8 +2,8 @@ import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import type { Provider } from '../../generated/prisma/enums'
-import type { AvatarRequest, UserIdRequest } from '../lib/interfaces'
-import { issueJwt, issueTempJwt, type TempPayload } from '../lib/issueJwt'
+import type { AvatarRequest, ReqError, UserIdRequest } from '../lib/interfaces'
+import { issueJwt, issueTempJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
 
 interface LoginData {
@@ -16,6 +16,10 @@ interface OauthData {
 	display: string
 }
 
+const verify: RequestHandler = async (req, res) => {
+	res.status(200).send('okay')
+}
+
 const signIn: RequestHandler = async (req: UserIdRequest, res) => {
 	const id = req.userId
 	if (!id) {
@@ -23,7 +27,8 @@ const signIn: RequestHandler = async (req: UserIdRequest, res) => {
 		return
 	}
 	const token = issueJwt(id)
-	res.json(token.token)
+
+	res.json(token)
 }
 
 const logIn: RequestHandler = async (req, res) => {
@@ -36,16 +41,33 @@ const logIn: RequestHandler = async (req, res) => {
 	})
 
 	if (user === null || user.local === null) {
-		return res.json(false)
+		const error: ReqError = {
+			type: 'client',
+			name: 'username',
+			msg: 'User not found.'
+		}
+		return res.json(error)
 	}
 
 	const match = await bcrypt.compare(password, user.local.hash)
 	if (!match) {
-		return res.json(false)
+		const error: ReqError = {
+			type: 'client',
+			name: 'password',
+			msg: 'Wrong password.'
+		}
+		return res.json(error)
 	}
 
 	const token = issueJwt(user.id)
-	res.json(token.token)
+	res.cookie('access_token', token, {
+		httpOnly: true,
+		secure: true,
+		sameSite: 'none',
+		maxAge: 1000 * 60 * 60 * 24 * 7
+	})
+
+	res.json(true)
 }
 
 const oauthCallback = (provider: Provider) => {
@@ -95,4 +117,4 @@ const oauthRegister = (provider: Provider) => {
 	return createUser
 }
 
-export { logIn, oauthCallback, oauthRegister, signIn }
+export { logIn, oauthCallback, oauthRegister, signIn, verify }

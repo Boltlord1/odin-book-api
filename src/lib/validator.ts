@@ -1,7 +1,7 @@
 import { body } from 'express-validator'
 
 function required(name: string, msg: string, min: number = 4) {
-	return body('username')
+	return body(name)
 		.trim()
 		.notEmpty()
 		.withMessage(`Missing ${msg}!`)
