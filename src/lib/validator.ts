@@ -1,15 +1,28 @@
 import { body } from 'express-validator'
 
-const username = body('username')
-	.trim()
-	.notEmpty()
-	.withMessage('Missing username!')
-	.isLength({ min: 2, max: 32 })
-	.withMessage('Username must be between 2 and 32 characters.')
+function required(name: string, msg: string, min: number = 4) {
+	return body('username')
+		.trim()
+		.notEmpty()
+		.withMessage(`Missing ${msg}!`)
+		.isLength({ min, max: 32 })
+		.withMessage(`${msg} must be between ${min} and 32 characters.`)
+}
+
+function optional(name: string, msg: string, min: number = 2) {
+	return body(name)
+		.trim()
+		.optional({ values: 'falsy' })
+		.isLength({ min, max: 32 })
+		.withMessage(`${msg} must be between ${min} and 32 characters.`)
+}
 
 const password = body('password')
 	.trim()
+	.notEmpty()
+	.withMessage('Missing password!')
 	.isLength({ min: 6, max: 32 })
+	.withMessage('Password must be between 6 and 32 characters.')
 	.isStrongPassword({
 		minLength: 6,
 		minLowercase: 1,
@@ -18,16 +31,8 @@ const password = body('password')
 		minSymbols: 0
 	})
 	.withMessage(
-		'Password must be between 6 and 32 characters and contain a number, lowercase and uppercase letter.'
+		'Password must contain a number, lowercase and uppercase letter.'
 	)
-
-function display(name: string) {
-	return body(name)
-		.trim()
-		.optional({ values: 'falsy' })
-		.isLength({ min: 2, max: 32 })
-		.withMessage('Display name must be between 2 and 32 characters.')
-}
 
 const content = body('content')
 	.trim()
@@ -43,4 +48,4 @@ const title = body('title')
 	.isLength({ max: 256 })
 	.withMessage('Title must be less than 256 characters.')
 
-export { content, display, password, title, username }
+export { content, optional, password, required, title }

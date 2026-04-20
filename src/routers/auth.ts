@@ -3,7 +3,8 @@ import {
 	logIn,
 	oauthCallback,
 	oauthRegister,
-	signIn
+	signIn,
+	verify
 } from '../controllers/auth'
 import { createUser } from '../controllers/user'
 import {
@@ -13,7 +14,7 @@ import {
 	uploadAvatar,
 	validateData
 } from '../controllers/validation'
-import { display, password, username } from '../lib/validator'
+import { optional, password, required } from '../lib/validator'
 import {
 	callbackOptions,
 	registerOptions,
@@ -21,14 +22,19 @@ import {
 } from '../passport/options'
 import passport from '../passport/passport'
 
+const username = required('username', 'Username')
+const display = optional('display', 'Display name')
+
 const router = Router()
+
+router.get('/verify', passport.authenticate('jwt', standardOptions), verify)
 
 router.post(
 	'/register',
 	parseAvatar,
 	username,
 	password,
-	display('display'),
+	display,
 	validateData,
 	createUser,
 	uploadAvatar,
@@ -36,7 +42,7 @@ router.post(
 )
 router.post('/login', username, password, validateData, logIn)
 
-router.get('/github', passport.authenticate('github', { session: false }))
+router.get('/github', passport.authenticate('github', standardOptions))
 router.get(
 	'/github/callback',
 	passport.authenticate('github', callbackOptions),
@@ -47,7 +53,7 @@ router.post(
 	passport.authenticate('jwt-temp', registerOptions),
 	parseAvatar,
 	username,
-	display('display'),
+	display,
 	validateData,
 	uploadAuto,
 	oauthRegister('github')
@@ -70,7 +76,7 @@ router.post(
 	passport.authenticate('jwt-temp', registerOptions),
 	parseAvatar,
 	username,
-	display('display'),
+	display,
 	validateData,
 	uploadAuto,
 	oauthRegister('google')
