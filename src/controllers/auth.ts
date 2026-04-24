@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import type { Provider } from '../../generated/prisma/enums'
+import createId from '../lib/cuid2'
 import type { AvatarRequest, ReqError, UserIdRequest } from '../lib/interfaces'
 import { issueJwt, issueTempJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
@@ -102,6 +103,7 @@ const oauthRegister = (provider: Provider) => {
 				id: payload.sub,
 				user: {
 					create: {
+						id: createId(),
 						name: username,
 						display,
 						avatar

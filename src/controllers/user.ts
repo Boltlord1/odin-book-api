@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
+import createId from '../lib/cuid2'
 import type { UserIdRequest } from '../lib/interfaces'
 import prisma from '../lib/primsa'
 
@@ -75,6 +76,7 @@ const createUser: RequestHandler = async (req: UserIdRequest, res, next) => {
 				hash,
 				user: {
 					create: {
+						id: createId(),
 						name: username,
 						display,
 						avatar: 'default'

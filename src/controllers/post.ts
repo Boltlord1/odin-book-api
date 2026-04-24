@@ -4,6 +4,7 @@ import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import multer from 'multer'
 import cloudinary from '../lib/cloudinary'
+import createId from '../lib/cuid2'
 import type { ErrorRequest, PostRequest, ReqError } from '../lib/interfaces'
 import prisma from '../lib/primsa'
 
@@ -33,6 +34,11 @@ const parseImages: RequestHandler = async (req: ErrorRequest, res, next) => {
 }
 
 const getPosts: RequestHandler = async (req, res) => {
+	if (!req.user) {
+		res.send('unauthorized')
+		return
+	}
+
 	const posts = await prisma.post.findMany({
 		orderBy: { createdAt: 'desc' },
 		include: {
@@ -45,6 +51,7 @@ const getPosts: RequestHandler = async (req, res) => {
 				select: { name: true, display: true, avatar: true }
 			},
 			comments: {
+				orderBy: { createdAt: 'asc' },
 				include: {
 					_count: {
 						select: {
@@ -55,7 +62,13 @@ const getPosts: RequestHandler = async (req, res) => {
 						select: { name: true, display: true, avatar: true }
 					}
 				}
-			}
+			},
+			likedBy: {
+				where: {
+					id: req.user.id
+				}
+			},
+			images: true
 		}
 	})
 
@@ -69,21 +82,43 @@ const getPost: RequestHandler = async (req, res) => {
 		return
 	}
 
+	if (!req.user) {
+		res.send('unauthorized')
+		return
+	}
+
 	const post = await prisma.post.findUnique({
 		where: {
 			id
 		},
 		include: {
+			_count: {
+				select: {
+					likedBy: true
+				}
+			},
 			author: {
 				select: { name: true, display: true, avatar: true }
 			},
 			comments: {
+				orderBy: { createdAt: 'asc' },
 				include: {
+					_count: {
+						select: {
+							likedBy: true
+						}
+					},
 					author: {
 						select: { name: true, display: true, avatar: true }
 					}
 				}
-			}
+			},
+			likedBy: {
+				where: {
+					id: req.user.id
+				}
+			},
+			images: true
 		}
 	})
 
@@ -101,8 +136,9 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
 
 	const post = await prisma.post.create({
 		data: {
+			id: createId(),
 			title,
-			content,
+			content: content || null,
 			authorId: user.id
 		}
 	})
@@ -120,7 +156,7 @@ const uploadImages: RequestHandler = async (req: PostRequest, res) => {
 
 	const files = req.files
 	if (!files || !Array.isArray(files)) {
-		res.json(true)
+		res.json(postId)
 		return
 	}
 
@@ -158,7 +194,10 @@ const uploadImages: RequestHandler = async (req: PostRequest, res) => {
 
 	const imageData = fulfilled.map((r) => {
 		return {
+			id: createId(),
 			publicId: r.value.public_id,
+			height: r.value.height,
+			width: r.value.width,
 			postId: postId
 		}
 	})
@@ -167,7 +206,7 @@ const uploadImages: RequestHandler = async (req: PostRequest, res) => {
 		data: imageData
 	})
 
-	res.json(true)
+	res.json(postId)
 }
 
 export { createPost, getPost, getPosts, parseImages, uploadImages }

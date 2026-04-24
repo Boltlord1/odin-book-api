@@ -40,7 +40,13 @@ router.post(
 	uploadAvatar,
 	signIn
 )
-router.post('/login', username, required('password', 'Password', 1), validateData, logIn)
+router.post(
+	'/login',
+	username,
+	required('password', 'Password', 1),
+	validateData,
+	logIn
+)
 
 router.get('/github', passport.authenticate('github', standardOptions))
 router.get(

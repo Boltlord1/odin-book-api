@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
+import createId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 
 interface CommentData {
@@ -23,13 +24,14 @@ const createComment: RequestHandler = async (req, res) => {
 
 	const comment = await prisma.comment.create({
 		data: {
+			id: createId(),
 			content,
 			postId,
 			authorId: user.id
 		}
 	})
 
-	res.json(comment)
+	res.json(true)
 }
 
 export { createComment }

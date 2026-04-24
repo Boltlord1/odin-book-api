@@ -13,10 +13,10 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(uuid()) @db.Uuid
-  name          String     @unique @db.VarChar(255)
-  display       String     @db.VarChar(255)
-  avatar        String     @db.VarChar(255)
+  id            String     @id
+  name          String     @unique
+  display       String
+  avatar        String
   posts         Post[]     @relation("author")
   comments      Comment[]
   local         LocalUser?
@@ -28,16 +28,16 @@ model User {
 }
 
 model LocalUser {
-  hash   String @db.VarChar(255)
+  hash   String
   user   User   @relation(fields: [userId], references: [id])
-  userId String @id @db.Uuid
+  userId String @id
 }
 
 model OauthUser {
   provider Provider
-  id       String   @db.VarChar(255)
+  id       String
   user     User     @relation(fields: [userId], references: [id])
-  userId   String   @unique @db.Uuid
+  userId   String   @unique
 
   @@id(name: "providerId", [provider, id])
 }
@@ -48,31 +48,33 @@ enum Provider {
 }
 
 model Post {
-  id        String    @id @default(uuid()) @db.Uuid
-  title     String    @db.VarChar(255)
-  content   String    @db.Text
+  id        String    @id
+  title     String
+  content   String?
   createdAt DateTime  @default(now())
   author    User      @relation("author", fields: [authorId], references: [id])
-  authorId  String    @db.Uuid
+  authorId  String
   comments  Comment[]
   likedBy   User[]    @relation("liked_posts")
   images    Image[]
 }
 
 model Image {
-  id        String @id @db.Uuid @default(uuid())
-  publicId  String @unique @db.VarChar(255)
-  post      Post   @relation(fields: [postId], references: [id])
-  postId    String @db.Uuid
+  id       String @id
+  publicId String @unique
+  height   Int
+  width    Int
+  post     Post   @relation(fields: [postId], references: [id])
+  postId   String
 }
 
 model Comment {
-  id        String   @id @default(uuid()) @db.Uuid
-  content   String   @db.Text
+  id        String   @id
+  content   String
   createdAt DateTime @default(now())
   author    User     @relation(fields: [authorId], references: [id])
-  authorId  String   @db.Uuid
+  authorId  String
   post      Post     @relation(fields: [postId], references: [id])
-  postId    String   @db.Uuid
+  postId    String
   likedBy   User[]   @relation("liked_comments")
 }

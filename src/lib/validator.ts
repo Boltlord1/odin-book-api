@@ -36,8 +36,6 @@ const password = body('password')
 
 const content = body('content')
 	.trim()
-	.notEmpty()
-	.withMessage('Missing content!')
 	.isLength({ max: 512 })
 	.withMessage('Content must be less than 512 characters.')
 
