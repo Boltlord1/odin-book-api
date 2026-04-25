@@ -3,7 +3,7 @@ import {
 	Strategy,
 	type VerifyCallback
 } from 'passport-jwt'
-import cookieExtractor from '../lib/cookie'
+import { cookieExtractor } from '../lib/cookie'
 import type { Payload } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
 

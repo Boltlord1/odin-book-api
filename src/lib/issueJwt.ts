@@ -19,7 +19,6 @@ function issueJwt(id: string) {
 }
 
 function issueTempJwt(id: string, avatar: string, provider: Provider) {
-	console.log(avatar)
 	const payload = {
 		sub: id,
 		avatar,
@@ -33,10 +32,7 @@ function issueTempJwt(id: string, avatar: string, provider: Provider) {
 		algorithm: 'RS256'
 	})
 
-	return {
-		token: `Bearer ${token}`,
-		expires: '10m'
-	}
+	return token
 }
 
 interface LoginPayload {

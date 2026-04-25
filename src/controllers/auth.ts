@@ -6,6 +6,9 @@ import createId from '../lib/cuid2'
 import type { AvatarRequest, ReqError, UserIdRequest } from '../lib/interfaces'
 import { issueJwt, issueTempJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
+import { longOptions, tempOptions } from '../lib/cookie'
+
+const frontUrl = process.env.FRONT_END
 
 interface LoginData {
 	username: string
@@ -27,9 +30,10 @@ const signIn: RequestHandler = async (req: UserIdRequest, res) => {
 		res.json(false)
 		return
 	}
-	const token = issueJwt(id)
 
-	res.json(token)
+	const token = issueJwt(id)
+	res.cookie('access_token', token, longOptions)
+	res.json(true)
 }
 
 const logIn: RequestHandler = async (req, res) => {
@@ -61,12 +65,7 @@ const logIn: RequestHandler = async (req, res) => {
 	}
 
 	const token = issueJwt(user.id)
-	res.cookie('access_token', token, {
-		httpOnly: true,
-		secure: true,
-		sameSite: 'none',
-		maxAge: 1000 * 60 * 60 * 24 * 7
-	})
+	res.cookie('access_token', token, longOptions)
 
 	res.json(true)
 }
@@ -76,12 +75,14 @@ const oauthCallback = (provider: Provider) => {
 		const identity = req.identity
 		if (identity.exists) {
 			const token = issueJwt(identity.id)
-			res.json(token)
+			res.cookie('access_token', token, longOptions)
+			res.redirect(`${frontUrl}`)
 			return
 		}
 
 		const token = issueTempJwt(identity.id, identity.avatar, provider)
-		res.json(token)
+		res.cookie('temp_token', token, tempOptions)
+		res.redirect(`${frontUrl}/auth/signup/${provider}`)
 	}
 
 	return verifyFunction
@@ -112,8 +113,10 @@ const oauthRegister = (provider: Provider) => {
 			}
 		})
 
-		const token = issueJwt(user.id)
-		res.json(token)
+		res.clearCookie('temp_token')
+		const token = issueJwt(user.userId)
+		res.cookie('access_token', token, longOptions)
+		res.json(true)
 	}
 
 	return createUser
