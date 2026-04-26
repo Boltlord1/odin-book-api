@@ -9,7 +9,6 @@ import {
 import { createUser } from '../controllers/user'
 import {
 	parseAvatar,
-	updateAvatar,
 	uploadAuto,
 	uploadAvatar,
 	validateData
@@ -86,13 +85,6 @@ router.post(
 	validateData,
 	uploadAuto,
 	oauthRegister('google')
-)
-
-router.put(
-	'/avatar',
-	passport.authenticate('jwt', standardOptions),
-	parseAvatar,
-	updateAvatar
 )
 
 export default router

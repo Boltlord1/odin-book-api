@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
-import { matchedData } from 'express-validator'
+import { matchedData, validationResult } from 'express-validator'
+import type { User } from '../../generated/prisma/client'
 import createId from '../lib/cuid2'
 import type { UserIdRequest } from '../lib/interfaces'
 import prisma from '../lib/primsa'
@@ -93,4 +94,39 @@ const createUser: RequestHandler = async (req: UserIdRequest, res, next) => {
 	next()
 }
 
-export { createUser, getSelf, getUser }
+interface UpdateBody {
+	username: string
+	display: string
+}
+
+interface UpdateData {
+	name?: string
+	display?: string
+}
+
+const updateUser: RequestHandler = async (req, res) => {
+	const errors = validationResult(req)
+	if (!errors.isEmpty()) {
+		res.status(200).json(errors.array())
+		return
+	}
+
+	const oldUser = req.user as User
+	const { username, display } = matchedData<UpdateBody>(req)
+
+	const data: UpdateData = {}
+
+	if (username && username !== oldUser.name) data.name = username
+	if (display) data.display = display
+
+	const user = await prisma.user.update({
+		where: {
+			id: oldUser.id
+		},
+		data
+	})
+
+	res.json(user)
+}
+
+export { createUser, getSelf, getUser, updateUser }

@@ -2,11 +2,11 @@ import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import type { Provider } from '../../generated/prisma/enums'
+import { longOptions, tempOptions } from '../lib/cookie'
 import createId from '../lib/cuid2'
 import type { AvatarRequest, ReqError, UserIdRequest } from '../lib/interfaces'
 import { issueJwt, issueTempJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
-import { longOptions, tempOptions } from '../lib/cookie'
 
 const frontUrl = process.env.FRONT_END
 

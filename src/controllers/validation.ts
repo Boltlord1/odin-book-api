@@ -162,12 +162,12 @@ const updateAvatar: RequestHandler = async (req, res) => {
 			folder,
 			resource_type: 'auto'
 		})
-		await prisma.user.update({
+		const updated = await prisma.user.update({
 			where: { id: user.id },
 			data: { avatar: response.public_id }
 		})
 		await cloudinary.uploader.destroy(user.avatar)
-		res.json(true)
+		res.json(updated)
 	} catch (err) {
 		const error: ReqError = {
 			type: 'server',

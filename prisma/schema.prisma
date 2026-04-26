@@ -19,30 +19,25 @@ model User {
   avatar        String
   posts         Post[]     @relation("author")
   comments      Comment[]
-  local         LocalUser?
-  oauth         OauthUser?
+  identities    Identity[]
   likedPosts    Post[]     @relation("liked_posts")
   likedComments Comment[]  @relation("liked_comments")
   follows       User[]     @relation("follows")
   followers     User[]     @relation("follows")
 }
 
-model LocalUser {
-  hash   String
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @id
-}
-
-model OauthUser {
+model Identity {
   provider Provider
   id       String
   user     User     @relation(fields: [userId], references: [id])
-  userId   String   @unique
+  userId   String
+  data     String?
 
   @@id(name: "providerId", [provider, id])
 }
 
 enum Provider {
+  email
   github
   google
 }

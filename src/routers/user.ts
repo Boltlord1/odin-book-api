@@ -1,7 +1,8 @@
 import { Router } from 'express'
-import { updateUser } from '../controllers/accounts'
-import { getSelf, getUser } from '../controllers/user'
+import { getSelf, getUser, updateUser } from '../controllers/user'
+import { parseAvatar, updateAvatar } from '../controllers/validation'
 import { optional } from '../lib/validator'
+import { standardOptions } from '../passport/options'
 import passport from '../passport/passport'
 
 const router = Router()
@@ -13,6 +14,13 @@ router.put(
 	optional('username', 'Username'),
 	optional('display', 'Display name'),
 	updateUser
+)
+
+router.put(
+	'/avatar',
+	passport.authenticate('jwt', standardOptions),
+	parseAvatar,
+	updateAvatar
 )
 
 router.get('/:name', passport.authenticate('jwt', { session: false }), getUser)
