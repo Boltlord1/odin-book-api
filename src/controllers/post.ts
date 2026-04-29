@@ -1,37 +1,34 @@
-import { Buffer } from 'node:buffer'
-import type { UploadApiResponse } from 'cloudinary'
+import { createId } from '@paralleldrive/cuid2'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
-import multer from 'multer'
-import cloudinary from '../lib/cloudinary'
-import createId from '../lib/cuid2'
 import prisma from '../lib/primsa'
-import type { ErrorRequest, PostRequest, ReqError } from '../types/interfaces'
+import { frontendUrl } from '../lib/variables'
+import type { CommentData, PostData } from '../types/body'
 import type { UserWithIdentities } from '../types/prisma'
+import type { PostRequest } from '../types/request'
 
-const upload = multer({
-	storage: multer.memoryStorage(),
-	limits: { fileSize: 5 * 1024 * 1024 }
-}).array('images', 5)
+const createPost: RequestHandler = async (req: PostRequest, res, next) => {
+	const user = req.user as UserWithIdentities
 
-interface PostData {
-	title: string
-	content: string
-}
-
-const parseImages: RequestHandler = async (req: ErrorRequest, res, next) => {
-	upload(req, res, (err) => {
-		if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-			const error: ReqError = {
-				type: 'client',
-				name: 'images',
-				msg: 'Image file size must be less than 5 MB.'
-			}
-			req.sizeError = error
+	const { title, content } = matchedData<PostData>(req)
+	const post = await prisma.post.create({
+		data: {
+			id: createId(),
+			title,
+			content: content || null,
+			authorId: user.id
 		}
-
-		next()
 	})
+
+	const postId = post.id
+	const files = req.files
+	if (!req.files || !Array.isArray(files)) {
+		res.redirect(`${frontendUrl}/app/post/${postId}`)
+		return
+	}
+
+	req.postId = postId
+	next()
 }
 
 const getPosts: RequestHandler = async (req, res) => {
@@ -40,33 +37,19 @@ const getPosts: RequestHandler = async (req, res) => {
 	const posts = await prisma.post.findMany({
 		orderBy: { createdAt: 'desc' },
 		include: {
+			images: true,
+			author: true,
 			_count: {
 				select: {
-					likedBy: true
-				}
-			},
-			author: {
-				select: { name: true, display: true, avatar: true }
-			},
-			comments: {
-				orderBy: { createdAt: 'asc' },
-				include: {
-					_count: {
-						select: {
-							likedBy: true
-						}
-					},
-					author: {
-						select: { name: true, display: true, avatar: true }
-					}
+					likedBy: true,
+					comments: true
 				}
 			},
 			likedBy: {
 				where: {
 					id: user.id
 				}
-			},
-			images: true
+			}
 		}
 	})
 
@@ -78,116 +61,111 @@ const getPost: RequestHandler = async (req, res) => {
 	const id = req.params.id as string
 
 	const post = await prisma.post.findUnique({
-		where: {
-			id
-		},
+		where: { id },
 		include: {
+			images: true,
+			author: true,
 			_count: {
 				select: {
-					likedBy: true
-				}
-			},
-			author: {
-				select: { name: true, display: true, avatar: true }
-			},
-			comments: {
-				orderBy: { createdAt: 'asc' },
-				include: {
-					_count: {
-						select: {
-							likedBy: true
-						}
-					},
-					author: {
-						select: { name: true, display: true, avatar: true }
-					}
+					likedBy: true,
+					comments: true
 				}
 			},
 			likedBy: {
 				where: {
 					id: user.id
 				}
-			},
-			images: true
+			}
 		}
 	})
 
 	res.json(post)
 }
 
-const createPost: RequestHandler = async (req: PostRequest, res, next) => {
+const createComment: RequestHandler = async (req, res) => {
 	const user = req.user as UserWithIdentities
+	const postId = req.params.id as string
 
-	const { title, content } = matchedData<PostData>(req)
-
-	const post = await prisma.post.create({
+	const { content } = matchedData<CommentData>(req)
+	await prisma.comment.create({
 		data: {
 			id: createId(),
-			title,
-			content: content || null,
+			content,
+			postId,
 			authorId: user.id
 		}
 	})
 
-	req.postId = post.id
-	next()
+	res.json(true)
 }
 
-const uploadImages: RequestHandler = async (req: PostRequest, res) => {
-	const postId = req.postId as string
-	const files = req.files as Express.Multer.File[]
-	if (!files) {
-		res.json(postId)
-		return
-	}
+const getComments: RequestHandler = async (req, res) => {
+	const user = req.user as UserWithIdentities
+	const postId = req.params.id as string
 
-	const promises: Promise<UploadApiResponse>[] = []
-	for (const file of files) {
-		const folder = `${process.env.POST_FOLDER}`
-		const b64 = Buffer.from(file.buffer).toString('base64')
-		const dataURI = `data:${file.mimetype};base64,${b64}`
-		const promise = cloudinary.uploader.upload(dataURI, {
-			folder,
-			resource_type: 'auto'
+	const comments = await prisma.comment.findMany({
+		where: { postId },
+		include: {
+			author: true,
+			_count: {
+				select: {
+					likedBy: true
+				}
+			},
+			likedBy: {
+				where: {
+					id: user.id
+				}
+			}
+		}
+	})
+
+	res.json(comments)
+}
+
+const changeLike = (
+	type: 'post' | 'comment',
+	action: 'connect' | 'disconnect'
+) => {
+	const change: RequestHandler = async (req, res) => {
+		const user = req.user as UserWithIdentities
+		const postId = req.params.id as string
+		const commentId = req.params.comment as string
+
+		const row = type === 'post' ? 'likedPosts' : 'likedComments'
+		const id = type === 'post' ? postId : commentId
+		await prisma.user.update({
+			where: {
+				id: user.id
+			},
+			data: {
+				[`${row}`]: {
+					[`${action}`]: {
+						id
+					}
+				}
+			}
 		})
-		promises.push(promise)
+
+		res.json(true)
 	}
 
-	const responses = await Promise.allSettled(promises)
-
-	const fulfilled = responses.filter((r) => r.status === 'fulfilled')
-	const rejected = responses.filter((r) => r.status === 'rejected')
-
-	if (rejected.length > 0) {
-		const destroy = fulfilled.map((r) =>
-			cloudinary.uploader.destroy(r.value.public_id)
-		)
-		await Promise.all(destroy)
-
-		const error: ReqError = {
-			type: 'server',
-			msg: 'Error uploading images.',
-			name: 'cloudinary'
-		}
-		res.json(error)
-		return
-	}
-
-	const imageData = fulfilled.map((r) => {
-		return {
-			id: createId(),
-			publicId: r.value.public_id,
-			height: r.value.height,
-			width: r.value.width,
-			postId: postId
-		}
-	})
-
-	await prisma.image.createMany({
-		data: imageData
-	})
-
-	res.json(postId)
+	return change
 }
 
-export { createPost, getPost, getPosts, parseImages, uploadImages }
+const likePost = changeLike('post', 'connect')
+const unlikePost = changeLike('post', 'disconnect')
+const likeComment = changeLike('comment', 'connect')
+const unlikeComment = changeLike('comment', 'disconnect')
+
+export {
+	createComment,
+	createPost,
+	getComments,
+	getPost,
+	getPosts,
+	likeComment,
+	likePost,
+	unlikeComment,
+	unlikePost
+}

@@ -38,6 +38,7 @@ model Identity {
   data     Json?
 
   @@id(name: "providerId", [provider, id])
+  @@unique(name: "connection", [userId, provider])
 }
 
 enum Provider {

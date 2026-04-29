@@ -1,28 +1,38 @@
 import { Router } from 'express'
-import { getSelf, getUser, updateUser } from '../controllers/user'
-import { parseAvatar, updateAvatar } from '../controllers/validation'
+import { updateAvatar } from '../controllers/cloudinary'
+import {
+	follow,
+	getSelf,
+	getUser,
+	unfollow,
+	updateUser
+} from '../controllers/user'
+import { validateAvatar, validateFinal } from '../controllers/validate'
 import { optional } from '../lib/validator'
-import { standardOptions } from '../passport/options'
-import passport from '../passport/passport'
+import { jwt } from '../passport/passport'
 
-const router = Router()
-
-router.get('/', passport.authenticate('jwt', standardOptions), getSelf)
-router.put(
-	'/',
-	passport.authenticate('jwt', standardOptions),
+const get = [jwt, getSelf]
+const put = [
+	jwt,
 	optional('username', 'Username'),
 	optional('display', 'Display name'),
 	updateUser
-)
+]
 
-router.put(
-	'/avatar',
-	passport.authenticate('jwt', standardOptions),
-	parseAvatar,
-	updateAvatar
-)
+const putAvatar = [jwt, validateAvatar, validateFinal, updateAvatar]
+const getId = [getUser]
 
-router.get('/:name', passport.authenticate('jwt', standardOptions), getUser)
+const putId = [jwt, follow]
+const deleteId = [jwt, unfollow]
+
+const router = Router()
+
+router.get('/', get)
+router.put('/', put)
+router.put('/avatar', putAvatar)
+
+router.get('/:id', getId)
+router.put('/:id', putId)
+router.delete('/:id', deleteId)
 
 export default router

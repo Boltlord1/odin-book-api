@@ -1,5 +1,5 @@
 import type { Provider } from '../../generated/prisma/enums'
-import type { OauthData } from './data'
+import type { OauthIdentity } from './prisma'
 
 interface Base {
 	id: string
@@ -13,7 +13,7 @@ interface Verified extends Base {
 interface Unverified extends Base {
 	type: 'unverified'
 	avatar: string
-	data: OauthData
+	data: OauthIdentity
 }
 
 type Case = Verified | Unverified

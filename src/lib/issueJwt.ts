@@ -1,12 +1,12 @@
 import jsonWebToken from 'jsonwebtoken'
 import type { Provider } from '../../generated/prisma/enums'
-import type { OauthData } from '../types/data'
-import type { LoginPayload, TempPayload } from '../types/temp'
+import type { OauthIdentity } from '../types/prisma'
+import type { LogInPayload, TempPayload } from '../types/temp'
 
 const PRIV_KEY = `${process.env.PRIV_KEY}`.replace(/\\n/g, '\n')
 
 function issueJwt(id: string) {
-	const payload: LoginPayload = {
+	const payload: LogInPayload = {
 		type: 'login',
 		id,
 		iat: Date.now()
@@ -23,7 +23,7 @@ function issueJwt(id: string) {
 function issueTempJwt(
 	id: string,
 	avatar: string,
-	data: OauthData,
+	data: OauthIdentity,
 	provider: Provider
 ) {
 	const payload: TempPayload = {

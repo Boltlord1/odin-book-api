@@ -18,6 +18,9 @@ function optional(name: string, msg: string, min: number = 2) {
 		.withMessage(`${msg} must be between ${min} and 32 characters.`)
 }
 
+const username = required('username', 'Username')
+const display = optional('display', 'Display name')
+
 const email = body('email')
 	.trim()
 	.notEmpty()
@@ -83,4 +86,14 @@ const comment = body('comment')
 	.isLength({ max: 512 })
 	.withMessage('Comment must be less than 500 characters.')
 
-export { comment, content, email, optional, password, required, title }
+export {
+	comment,
+	content,
+	display,
+	email,
+	optional,
+	password,
+	required,
+	title,
+	username
+}

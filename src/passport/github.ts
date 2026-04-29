@@ -7,8 +7,7 @@ import {
 import type { VerifyCallback, VerifyFunctionWithRequest } from 'passport-oauth2'
 import prisma from '../lib/primsa'
 import type { Unverified, Verified } from '../types/case'
-import type { GithubData } from '../types/data'
-import type { UserWithIdentities } from '../types/prisma'
+import type { GithubIdentity, UserWithIdentities } from '../types/prisma'
 
 const clientID = `${process.env.GITHUB_CLIENT_ID}`
 const clientSecret = `${process.env.GITHUB_SECRET}`
@@ -52,7 +51,7 @@ const verifyCallback: VerifyFunctionWithRequest = async (
 		return
 	}
 
-	const data: GithubData = {
+	const data: GithubIdentity = {
 		username,
 		url: profile.profileUrl
 	}

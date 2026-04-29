@@ -7,8 +7,7 @@ import {
 } from 'passport-google-oauth20'
 import prisma from '../lib/primsa'
 import type { Unverified, Verified } from '../types/case'
-import type { GoogleData } from '../types/data'
-import type { UserWithIdentities } from '../types/prisma'
+import type { GoogleIdentity, UserWithIdentities } from '../types/prisma'
 
 const clientID = `${process.env.GOOGLE_CLIENT_ID}`
 const clientSecret = `${process.env.GOOGLE_SECRET}`
@@ -54,7 +53,7 @@ const verifyCallback = async (
 		return
 	}
 
-	const data: GoogleData = {
+	const data: GoogleIdentity = {
 		email: finalEmail
 	}
 
@@ -88,7 +87,7 @@ const verifyCallback = async (
 	const _case: Unverified = {
 		type: 'unverified',
 		id: profile.id,
-		provider: 'Github',
+		provider: 'Google',
 		avatar,
 		data
 	}

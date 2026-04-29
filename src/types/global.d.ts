@@ -1,4 +1,4 @@
-import type { EmailData, GithubData, GoogleData } from './interfaces'
+import type { EmailData, GithubData, GoogleData } from './request'
 
 declare global {
 	namespace PrismaJson {

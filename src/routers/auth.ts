@@ -1,102 +1,91 @@
 import { Router } from 'express'
+import { logIn, logOut, signIn, verify } from '../controllers/auth'
+import { uploadAuto, uploadAvatar } from '../controllers/cloudinary'
 import {
-	addEmail,
-	logIn,
-	logOut,
-	oauthCallback,
-	oauthRegister,
-	optionalJwt,
-	signIn,
-	verify
-} from '../controllers/auth'
-import { createUser } from '../controllers/user'
+	githubCallback,
+	githubSignUp,
+	googleCallback,
+	googleSignUp
+} from '../controllers/oauth'
+import { connectEmail, createUser } from '../controllers/user'
 import {
-	parseAvatar,
-	uploadAuto,
-	uploadAvatar,
-	validateData
-} from '../controllers/validation'
-import { email, optional, password, required } from '../lib/validator'
-import { standardOptions } from '../passport/options'
-import passport from '../passport/passport'
+	validateAvatar,
+	validateBody,
+	validateFinal
+} from '../controllers/validate'
+import { display, email, password, required, username } from '../lib/validator'
+import { github, google, jwt, jwtOptional, jwtTemp } from '../passport/passport'
 
-const username = required('username', 'Username')
-const display = optional('display', 'Display name')
-
-const router = Router()
-
-router.get('/verify', passport.authenticate('jwt', standardOptions), verify)
-
-router.post(
-	'/register',
-	parseAvatar,
+const getVerify = [jwt, verify]
+const postSignUp = [
+	validateAvatar,
 	username,
 	display,
 	email,
-	password,
-	validateData,
+	...password,
+	validateBody,
+	validateFinal,
 	createUser,
 	uploadAvatar,
 	signIn
-)
-router.post(
-	'/login',
+]
+
+const postLogIn = [
 	username,
 	required('password', 'Password', 1),
-	validateData,
+	validateBody,
+	validateFinal,
 	logIn
-)
-router.get('/logout', logOut)
+]
 
-router.get('/github', passport.authenticate('github', standardOptions))
-router.get(
-	'/github/callback',
-	optionalJwt,
-	passport.authenticate('github', standardOptions),
-	oauthCallback('Github')
-)
-router.post(
-	'/github/register',
-	passport.authenticate('jwt-temp', standardOptions),
-	parseAvatar,
+const getLogOut = [logOut]
+const getGoogle = [google]
+const getGoogleCallback = [jwtOptional, google, googleCallback]
+const postGoogleSignUp = [
+	jwtTemp,
 	username,
 	display,
-	validateData,
+	validateBody,
+	validateFinal,
 	uploadAuto,
-	oauthRegister('Github')
-)
+	googleSignUp
+]
 
-router.get(
-	'/google',
-	passport.authenticate('google', {
-		session: false,
-		scope: ['profile', 'email']
-	})
-)
-router.get(
-	'/google/callback',
-	optionalJwt,
-	passport.authenticate('google', standardOptions),
-	oauthCallback('Google')
-)
-router.post(
-	'/google/register',
-	passport.authenticate('jwt-temp', standardOptions),
-	parseAvatar,
+const getGithub = [github]
+const getGithubCallback = [jwtOptional, github, githubCallback]
+const postGithubSignUp = [
+	jwtTemp,
 	username,
 	display,
-	validateData,
+	validateBody,
+	validateFinal,
 	uploadAuto,
-	oauthRegister('Google')
-)
+	githubSignUp
+]
 
-router.post(
-	'/email',
-	passport.authenticate('jwt', standardOptions),
+const postEmail = [
+	jwt,
 	email,
-	password,
-	validateData,
-	addEmail
-)
+	...password,
+	validateBody,
+	validateFinal,
+	connectEmail
+]
+
+const router = Router()
+
+router.get('/verify', getVerify)
+router.post('/login', postLogIn)
+router.get('/logout', getLogOut)
+router.post('/signup', postSignUp)
+router.post('/email', postEmail)
+
+router.get('/github', getGithub)
+router.get('/github/callback', getGithubCallback)
+router.post('/github/Signup', postGithubSignUp)
+
+router.get('/google', getGoogle)
+router.get('/google/callback', getGoogleCallback)
+router.post('/google/Signup', postGoogleSignUp)
 
 export default router

@@ -1,13 +1,10 @@
-// import type { User as PrismaUser } from '../../generated/prisma/client'
-// import type { TempPayload } from '../lib/issueJwt'
-// import type { Identity } from '../lib/interfaces'
+import type { ClientError, ServerError } from './error'
 
-// declare global {
-// 	namespace Express {
-// 		interface User extends PrismaUser {}
-// 		interface Request {
-// 			identity: Identity
-// 			payload: TempPayload
-// 		}
-// 	}
-// }
+declare global {
+	namespace Express {
+		interface Request {
+			errors: ClientError[]
+			error: ServerError
+		}
+	}
+}
