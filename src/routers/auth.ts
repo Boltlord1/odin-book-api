@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import {
+	addEmail,
 	logIn,
 	logOut,
 	oauthCallback,
@@ -87,6 +88,15 @@ router.post(
 	validateData,
 	uploadAuto,
 	oauthRegister('Google')
+)
+
+router.post(
+	'/email',
+	passport.authenticate('jwt', standardOptions),
+	email,
+	password,
+	validateData,
+	addEmail
 )
 
 export default router

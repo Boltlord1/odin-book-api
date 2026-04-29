@@ -15,6 +15,7 @@ import type {
 	ReqError,
 	UserIdRequest
 } from '../types/interfaces'
+import type { UserWithIdentities } from '../types/prisma'
 import type { TempPayload } from '../types/temp'
 
 const frontUrl = process.env.FRONT_END
@@ -27,6 +28,11 @@ interface LoginData {
 interface OauthData {
 	username: string
 	display: string
+}
+
+interface AddEmailData {
+	email: string
+	password: string
 }
 
 const verify: RequestHandler = async (req, res) => {
@@ -168,7 +174,36 @@ const optionalJwt: RequestHandler = (req, res, next) => {
 	)(req, res, next)
 }
 
+const addEmail: RequestHandler = async (req, res) => {
+	const user = req.user as UserWithIdentities
+	const exists = user.identities.find((i) => i.provider === 'Email')
+	if (exists) {
+		res.send('Account already has an email')
+		return
+	}
+
+	const { email, password } = matchedData<AddEmailData>(req)
+	const hash = await bcrypt.hash(password, 10)
+	const data: EmailData = {
+		hash,
+		verified: false
+	}
+
+	await prisma.identity.create({
+		data: {
+			provider: 'Email',
+			id: email,
+			data,
+			userId: user.id
+		}
+	})
+
+	res.clearCookie('access_token')
+	res.json(true)
+}
+
 export {
+	addEmail,
 	logIn,
 	logOut,
 	oauthCallback,
