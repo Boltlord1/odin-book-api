@@ -7,10 +7,10 @@ import passport from '../passport/passport'
 
 const router = Router()
 
-router.get('/', passport.authenticate('jwt', { session: false }), getSelf)
+router.get('/', passport.authenticate('jwt', standardOptions), getSelf)
 router.put(
 	'/',
-	passport.authenticate('jwt', { session: false }),
+	passport.authenticate('jwt', standardOptions),
 	optional('username', 'Username'),
 	optional('display', 'Display name'),
 	updateUser
@@ -23,6 +23,6 @@ router.put(
 	updateAvatar
 )
 
-router.get('/:name', passport.authenticate('jwt', { session: false }), getUser)
+router.get('/:name', passport.authenticate('jwt', standardOptions), getUser)
 
 export default router

@@ -5,8 +5,9 @@ import { matchedData } from 'express-validator'
 import multer from 'multer'
 import cloudinary from '../lib/cloudinary'
 import createId from '../lib/cuid2'
-import type { ErrorRequest, PostRequest, ReqError } from '../lib/interfaces'
 import prisma from '../lib/primsa'
+import type { ErrorRequest, PostRequest, ReqError } from '../types/interfaces'
+import type { UserWithIdentities } from '../types/prisma'
 
 const upload = multer({
 	storage: multer.memoryStorage(),
@@ -34,10 +35,7 @@ const parseImages: RequestHandler = async (req: ErrorRequest, res, next) => {
 }
 
 const getPosts: RequestHandler = async (req, res) => {
-	if (!req.user) {
-		res.send('unauthorized')
-		return
-	}
+	const user = req.user as UserWithIdentities
 
 	const posts = await prisma.post.findMany({
 		orderBy: { createdAt: 'desc' },
@@ -65,7 +63,7 @@ const getPosts: RequestHandler = async (req, res) => {
 			},
 			likedBy: {
 				where: {
-					id: req.user.id
+					id: user.id
 				}
 			},
 			images: true
@@ -76,16 +74,8 @@ const getPosts: RequestHandler = async (req, res) => {
 }
 
 const getPost: RequestHandler = async (req, res) => {
-	const id = req.params.id
-	if (typeof id !== 'string') {
-		res.json(false)
-		return
-	}
-
-	if (!req.user) {
-		res.send('unauthorized')
-		return
-	}
+	const user = req.user as UserWithIdentities
+	const id = req.params.id as string
 
 	const post = await prisma.post.findUnique({
 		where: {
@@ -115,7 +105,7 @@ const getPost: RequestHandler = async (req, res) => {
 			},
 			likedBy: {
 				where: {
-					id: req.user.id
+					id: user.id
 				}
 			},
 			images: true
@@ -126,11 +116,7 @@ const getPost: RequestHandler = async (req, res) => {
 }
 
 const createPost: RequestHandler = async (req: PostRequest, res, next) => {
-	const user = req.user
-	if (!user) {
-		res.json(false)
-		return
-	}
+	const user = req.user as UserWithIdentities
 
 	const { title, content } = matchedData<PostData>(req)
 
@@ -148,14 +134,9 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
 }
 
 const uploadImages: RequestHandler = async (req: PostRequest, res) => {
-	const postId = req.postId
-	if (!postId) {
-		res.json(false)
-		return
-	}
-
-	const files = req.files
-	if (!files || !Array.isArray(files)) {
+	const postId = req.postId as string
+	const files = req.files as Express.Multer.File[]
+	if (!files) {
 		res.json(postId)
 		return
 	}

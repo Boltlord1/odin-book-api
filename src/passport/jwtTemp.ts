@@ -5,7 +5,7 @@ import {
 	type VerifyCallback
 } from 'passport-jwt'
 import { tempCookieExtractor } from '../lib/cookie'
-import type { Payload } from '../lib/issueJwt'
+import type { Payload } from '../types/temp'
 
 const PUB_KEY = `${process.env.PUB_KEY}`.replace(/\\n/g, '\n')
 

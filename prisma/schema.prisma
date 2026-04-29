@@ -8,6 +8,10 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
 datasource db {
   provider = "postgresql"
 }
@@ -16,7 +20,7 @@ model User {
   id            String     @id
   name          String     @unique
   display       String
-  avatar        String
+  avatar        String     @default("odin-book/avatar/default")
   posts         Post[]     @relation("author")
   comments      Comment[]
   identities    Identity[]
@@ -31,15 +35,15 @@ model Identity {
   id       String
   user     User     @relation(fields: [userId], references: [id])
   userId   String
-  data     String?
+  data     Json?
 
   @@id(name: "providerId", [provider, id])
 }
 
 enum Provider {
-  email
-  github
-  google
+  Email
+  Github
+  Google
 }
 
 model Post {

@@ -1,22 +1,14 @@
 import type { RequestHandler } from 'express'
 import prisma from '../lib/primsa'
+import type { UserWithIdentities } from '../types/prisma'
 
 const follow: RequestHandler = async (req, res) => {
-	const user = req.user
-	if (!user) {
-		res.send('unauthorized')
-		return
-	}
-
-	const target = req.params.id
-	if (typeof target !== 'string') {
-		res.json(false)
-		return
-	}
+	const user = req.user as UserWithIdentities
+	const id = req.params.id as string
 
 	await prisma.user.update({
 		where: {
-			id: target
+			id
 		},
 		data: {
 			followers: {
@@ -31,21 +23,12 @@ const follow: RequestHandler = async (req, res) => {
 }
 
 const unfollow: RequestHandler = async (req, res) => {
-	const user = req.user
-	if (!user) {
-		res.send('unauthorized')
-		return
-	}
-
-	const target = req.params.id
-	if (typeof target !== 'string') {
-		res.json(false)
-		return
-	}
+	const user = req.user as UserWithIdentities
+	const id = req.params.id as string
 
 	await prisma.user.update({
 		where: {
-			id: target
+			id
 		},
 		data: {
 			followers: {

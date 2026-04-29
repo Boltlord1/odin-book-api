@@ -1,8 +1,10 @@
 import { Router } from 'express'
 import {
 	logIn,
+	logOut,
 	oauthCallback,
 	oauthRegister,
+	optionalJwt,
 	signIn,
 	verify
 } from '../controllers/auth'
@@ -13,12 +15,8 @@ import {
 	uploadAvatar,
 	validateData
 } from '../controllers/validation'
-import { optional, password, required } from '../lib/validator'
-import {
-	callbackOptions,
-	registerOptions,
-	standardOptions
-} from '../passport/options'
+import { email, optional, password, required } from '../lib/validator'
+import { standardOptions } from '../passport/options'
 import passport from '../passport/passport'
 
 const username = required('username', 'Username')
@@ -32,8 +30,9 @@ router.post(
 	'/register',
 	parseAvatar,
 	username,
-	password,
 	display,
+	email,
+	password,
 	validateData,
 	createUser,
 	uploadAvatar,
@@ -46,22 +45,24 @@ router.post(
 	validateData,
 	logIn
 )
+router.get('/logout', logOut)
 
 router.get('/github', passport.authenticate('github', standardOptions))
 router.get(
 	'/github/callback',
-	passport.authenticate('github', callbackOptions),
-	oauthCallback('github')
+	optionalJwt,
+	passport.authenticate('github', standardOptions),
+	oauthCallback('Github')
 )
 router.post(
 	'/github/register',
-	passport.authenticate('jwt-temp', registerOptions),
+	passport.authenticate('jwt-temp', standardOptions),
 	parseAvatar,
 	username,
 	display,
 	validateData,
 	uploadAuto,
-	oauthRegister('github')
+	oauthRegister('Github')
 )
 
 router.get(
@@ -73,18 +74,19 @@ router.get(
 )
 router.get(
 	'/google/callback',
-	passport.authenticate('google', callbackOptions),
-	oauthCallback('google')
+	optionalJwt,
+	passport.authenticate('google', standardOptions),
+	oauthCallback('Google')
 )
 router.post(
 	'/google/register',
-	passport.authenticate('jwt-temp', registerOptions),
+	passport.authenticate('jwt-temp', standardOptions),
 	parseAvatar,
 	username,
 	display,
 	validateData,
 	uploadAuto,
-	oauthRegister('google')
+	oauthRegister('Google')
 )
 
 export default router

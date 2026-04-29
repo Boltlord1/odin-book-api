@@ -3,13 +3,15 @@ import type { Request, RequestHandler } from 'express'
 import { validationResult } from 'express-validator'
 import multer from 'multer'
 import cloudinary from '../lib/cloudinary'
+import prisma from '../lib/primsa'
 import type {
 	AvatarRequest,
 	ErrorRequest,
 	ReqError,
 	UserIdRequest
-} from '../lib/interfaces'
-import prisma from '../lib/primsa'
+} from '../types/interfaces'
+import type { UserWithIdentities } from '../types/prisma'
+import type { TempPayload } from '../types/temp'
 
 const upload = multer({
 	storage: multer.memoryStorage(),
@@ -127,8 +129,8 @@ const uploadAvatar: RequestHandler = async (req: UserIdRequest, res, next) => {
 }
 
 const uploadAuto: RequestHandler = async (req: AvatarRequest, res, next) => {
-	const user = req.payload
-	const avatar = user.avatar
+	const _case = req.user as TempPayload
+	const avatar = _case.avatar
 
 	const folder = `${process.env.AVATAR_FOLDER}`
 	const response = await cloudinary.uploader.upload(avatar, {
@@ -141,11 +143,7 @@ const uploadAuto: RequestHandler = async (req: AvatarRequest, res, next) => {
 }
 
 const updateAvatar: RequestHandler = async (req, res) => {
-	const user = req.user
-	if (!user) {
-		res.json(false)
-		return
-	}
+	const user = req.user as UserWithIdentities
 
 	const file = req.file
 	if (!file) {
@@ -164,7 +162,8 @@ const updateAvatar: RequestHandler = async (req, res) => {
 		})
 		const updated = await prisma.user.update({
 			where: { id: user.id },
-			data: { avatar: response.public_id }
+			data: { avatar: response.public_id },
+			include: { identities: true }
 		})
 		await cloudinary.uploader.destroy(user.avatar)
 		res.json(updated)

@@ -5,13 +5,8 @@ const standardOptions: AuthenticateOptions = {
 }
 
 const callbackOptions: AuthenticateOptions = {
-	session: false,
-	assignProperty: 'identity'
+	...standardOptions,
+	assignProperty: 'case'
 }
 
-const registerOptions: AuthenticateOptions = {
-	session: false,
-	assignProperty: 'payload'
-}
-
-export { callbackOptions, registerOptions, standardOptions }
+export { standardOptions }

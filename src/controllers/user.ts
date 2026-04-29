@@ -1,22 +1,21 @@
 import bcrypt from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData, validationResult } from 'express-validator'
-import type { User } from '../../generated/prisma/client'
 import createId from '../lib/cuid2'
-import type { UserIdRequest } from '../lib/interfaces'
 import prisma from '../lib/primsa'
+import type { EmailData } from '../types/data'
+import type { UserIdRequest } from '../types/interfaces'
+import type { UserWithIdentities } from '../types/prisma'
 
 interface RegisterData {
 	username: string
-	password: string
 	display: string
+	email: string
+	password: string
 }
 
 const getUser: RequestHandler = async (req, res) => {
-	const name = req.params.name
-	if (typeof name !== 'string') {
-		return
-	}
+	const name = req.params.name as string
 
 	const user = await prisma.user.findUnique({
 		where: {
@@ -54,42 +53,38 @@ const getUser: RequestHandler = async (req, res) => {
 }
 
 const getSelf: RequestHandler = async (req, res) => {
-	const user = req.user
-	if (!user) {
-		res.json('unauthorized')
-		return
-	}
+	const user = req.user as UserWithIdentities
 
 	const self = await prisma.user.findUnique({
 		where: {
 			id: user.id
+		},
+		include: {
+			identities: true
 		}
 	})
 	res.json(self)
 }
 
 const createUser: RequestHandler = async (req: UserIdRequest, res, next) => {
-	const { username, password, display } = matchedData<RegisterData>(req)
+	const { username, display, email, password } = matchedData<RegisterData>(req)
 	const hash = await bcrypt.hash(password, 10)
-	try {
-		const user = await prisma.localUser.create({
-			data: {
-				hash,
-				user: {
-					create: {
-						id: createId(),
-						name: username,
-						display,
-						avatar: 'default'
-					}
+	const data: EmailData = { hash, verified: false }
+	const user = await prisma.identity.create({
+		data: {
+			provider: 'Email',
+			id: email,
+			data,
+			user: {
+				create: {
+					id: createId(),
+					name: username,
+					display: display
 				}
 			}
-		})
-		req.userId = user.userId
-	} catch (error) {
-		res.json(false)
-		return
-	}
+		}
+	})
+	req.userId = user.userId
 
 	next()
 }
@@ -111,7 +106,7 @@ const updateUser: RequestHandler = async (req, res) => {
 		return
 	}
 
-	const oldUser = req.user as User
+	const oldUser = req.user as UserWithIdentities
 	const { username, display } = matchedData<UpdateBody>(req)
 
 	const data: UpdateData = {}
@@ -123,7 +118,8 @@ const updateUser: RequestHandler = async (req, res) => {
 		where: {
 			id: oldUser.id
 		},
-		data
+		data,
+		include: { identities: true }
 	})
 
 	res.json(user)

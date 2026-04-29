@@ -9,14 +9,15 @@ import {
 } from '../controllers/post'
 import { validateData } from '../controllers/validation'
 import { content, title } from '../lib/validator'
+import { standardOptions } from '../passport/options'
 import passport from '../passport/passport'
 
 const router = Router()
 
-router.get('/', passport.authenticate('jwt', { session: false }), getPosts)
+router.get('/', passport.authenticate('jwt', standardOptions), getPosts)
 router.post(
 	'/',
-	passport.authenticate('jwt', { session: false }),
+	passport.authenticate('jwt', standardOptions),
 	parseImages,
 	title,
 	content,
@@ -25,10 +26,10 @@ router.post(
 	uploadImages
 )
 
-router.get('/:id', passport.authenticate('jwt', { session: false }), getPost)
+router.get('/:id', passport.authenticate('jwt', standardOptions), getPost)
 router.post(
 	'/:id',
-	passport.authenticate('jwt', { session: false }),
+	passport.authenticate('jwt', standardOptions),
 	content,
 	validateData,
 	createComment

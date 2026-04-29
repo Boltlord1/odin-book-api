@@ -1,50 +1,97 @@
-import { type Profile, Strategy, type StrategyOptions } from 'passport-github2'
-import type { VerifyCallback, VerifyFunction } from 'passport-oauth2'
-import type { Identity } from '../lib/interfaces'
+import type { Request } from 'express'
+import {
+	type Profile,
+	Strategy,
+	type StrategyOptionsWithRequest
+} from 'passport-github2'
+import type { VerifyCallback, VerifyFunctionWithRequest } from 'passport-oauth2'
 import prisma from '../lib/primsa'
+import type { Unverified, Verified } from '../types/case'
+import type { GithubData } from '../types/data'
+import type { UserWithIdentities } from '../types/prisma'
 
 const clientID = `${process.env.GITHUB_CLIENT_ID}`
 const clientSecret = `${process.env.GITHUB_SECRET}`
 
-const options: StrategyOptions = {
+const options: StrategyOptionsWithRequest = {
 	clientID,
 	clientSecret,
-	callbackURL: 'http://localhost:3000/auth/github/callback'
+	callbackURL: 'http://localhost:3000/auth/github/callback',
+	passReqToCallback: true
 }
 
-const verifyCallback: VerifyFunction = async (
+const verifyCallback: VerifyFunctionWithRequest = async (
+	req: Request,
 	accessToken: string,
-	requestToken: string,
+	refreshToken: string,
 	profile: Profile,
 	done: VerifyCallback
 ) => {
-	const existingUser = await prisma.oauthUser.findUnique({
+	const verified = await prisma.identity.findUnique({
 		where: {
 			providerId: {
-				provider: 'github',
+				provider: 'Github',
 				id: profile.id
 			}
 		}
 	})
 
-	if (existingUser !== null) {
-		const identity: Identity = {
-			id: existingUser.userId,
-			exists: true
+	if (verified) {
+		const _case: Verified = {
+			type: 'verified',
+			id: verified.userId,
+			provider: 'Github'
 		}
-
-		done(null, identity as unknown as Express.User)
+		done(null, _case)
 		return
 	}
 
-	const avatar = profile.photos?.[0] ? profile.photos[0].value : 'default'
-	const identity: Identity = {
-		id: profile.id,
-		avatar,
-		exists: false
+	const username = profile.username
+	if (!username) {
+		done(new Error('Github profile did not provider username'))
+		return
 	}
 
-	done(null, identity as unknown as Express.User)
+	const data: GithubData = {
+		username,
+		url: profile.profileUrl
+	}
+
+	const user = req.user as UserWithIdentities | undefined
+	if (user) {
+		const updated = await prisma.user.update({
+			where: {
+				id: user.id
+			},
+			data: {
+				identities: {
+					create: {
+						provider: 'Github',
+						id: profile.id,
+						data
+					}
+				}
+			}
+		})
+
+		const _case: Verified = {
+			type: 'verified',
+			id: updated.id,
+			provider: 'Github'
+		}
+		done(null, _case)
+		return
+	}
+
+	const avatar = profile.photos?.[0] ? profile.photos[0].value : ''
+	const _case: Unverified = {
+		type: 'unverified',
+		id: profile.id,
+		provider: 'Github',
+		avatar,
+		data
+	}
+	done(null, _case)
 }
 
 const strategy = new Strategy(options, verifyCallback)
