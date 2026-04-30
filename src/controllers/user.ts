@@ -3,13 +3,18 @@ import { hash } from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import prisma from '../lib/primsa'
+import { refinePost, refineSelf } from '../lib/refine'
 import type {
 	EmailData,
 	RegisterData,
 	UpdateBody,
 	UpdateData
 } from '../types/body'
-import type { EmailIdentity, UserWithIdentities } from '../types/prisma'
+import type {
+	EmailIdentity,
+	PossibleUser,
+	UserWithIdentities
+} from '../types/prisma'
 import type { UserIdRequest } from '../types/request'
 
 const createUser: RequestHandler = async (req: UserIdRequest, res, next) => {
@@ -52,7 +57,8 @@ const updateUser: RequestHandler = async (req, res) => {
 		include: { identities: true }
 	})
 
-	res.json(updated)
+	const refined = refineSelf(updated)
+	res.json(refined)
 }
 
 const connectEmail: RequestHandler = async (req, res) => {
@@ -80,7 +86,7 @@ const connectEmail: RequestHandler = async (req, res) => {
 	})
 
 	res.clearCookie('access_token')
-	res.json(true)
+	res.status(200).send('Success')
 }
 
 const getSelf: RequestHandler = async (req, res) => {
@@ -94,13 +100,23 @@ const getSelf: RequestHandler = async (req, res) => {
 			identities: true
 		}
 	})
-	res.json(self)
+
+	if (self === null) {
+		res.clearCookie('access_token')
+		res.status(401).send('Unauthorized')
+		return
+	}
+
+	const refined = refineSelf(self)
+	res.json(refined)
 }
 
 const getUser: RequestHandler = async (req, res) => {
+	const user = req.user as PossibleUser
+	const followers = user ? { where: { id: user.id } } : {}
 	const name = req.params.name as string
 
-	const user = await prisma.user.findUnique({
+	const profile = await prisma.user.findUnique({
 		where: { name },
 		include: {
 			_count: {
@@ -109,22 +125,42 @@ const getUser: RequestHandler = async (req, res) => {
 					followers: true,
 					follows: true
 				}
-			}
+			},
+			followers
 		}
 	})
 
-	res.json(user)
+	if (profile === null) {
+		res.status(404).send('Not found')
+		return
+	}
+
+	res.json(profile)
 }
 
 const getPosts: RequestHandler = async (req, res) => {
-	const authorId = req.params.id as string
+	const user = req.user as PossibleUser
+	const likedBy = user ? { where: { id: user.id } } : {}
 
+	const authorId = req.params.id as string
 	const posts = await prisma.post.findMany({
 		where: { authorId },
-		orderBy: { createdAt: 'desc' }
+		orderBy: { createdAt: 'desc' },
+		include: {
+			images: true,
+			author: true,
+			_count: {
+				select: {
+					comments: true,
+					likedBy: true
+				}
+			},
+			likedBy
+		}
 	})
 
-	res.json(posts)
+	const refined = posts.map(refinePost)
+	res.json(refined)
 }
 
 const getFollowers: RequestHandler = async (req, res) => {

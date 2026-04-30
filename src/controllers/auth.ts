@@ -15,7 +15,7 @@ const signIn: RequestHandler = async (req: UserIdRequest, res) => {
 
 	const token = issueJwt(id)
 	res.cookie('access_token', token, longOptions)
-	res.json(true)
+	res.send(200).send('Authorized')
 }
 
 const logIn: RequestHandler = async (req, res) => {
@@ -59,7 +59,7 @@ const logIn: RequestHandler = async (req, res) => {
 
 	const token = issueJwt(user.id)
 	res.cookie('access_token', token, longOptions)
-	res.json(true)
+	res.send(200).send('Authorized')
 }
 
 const logOut: RequestHandler = async (req, res) => {

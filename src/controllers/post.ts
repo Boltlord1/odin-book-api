@@ -2,9 +2,10 @@ import { createId } from '@paralleldrive/cuid2'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import prisma from '../lib/primsa'
+import { refineComment, refinePost } from '../lib/refine'
 import { frontendUrl } from '../lib/variables'
 import type { CommentData, PostData } from '../types/body'
-import type { UserWithIdentities } from '../types/prisma'
+import type { PossibleUser, UserWithIdentities } from '../types/prisma'
 import type { PostRequest } from '../types/request'
 
 const createPost: RequestHandler = async (req: PostRequest, res, next) => {
@@ -33,6 +34,7 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
 
 const getPosts: RequestHandler = async (req, res) => {
 	const user = req.user as UserWithIdentities
+	const where = user ? { id: user.id } : {}
 
 	const posts = await prisma.post.findMany({
 		orderBy: { createdAt: 'desc' },
@@ -41,25 +43,27 @@ const getPosts: RequestHandler = async (req, res) => {
 			author: true,
 			_count: {
 				select: {
-					likedBy: true,
+					likedBy: {
+						where: { NOT: where }
+					},
 					comments: true
 				}
 			},
 			likedBy: {
-				where: {
-					id: user.id
-				}
+				where
 			}
 		}
 	})
 
-	res.json(posts)
+	const refined = posts.map(refinePost)
+	res.json(refined)
 }
 
 const getPost: RequestHandler = async (req, res) => {
-	const user = req.user as UserWithIdentities
-	const id = req.params.id as string
+	const user = req.user as PossibleUser
+	const where = user ? { id: user.id } : {}
 
+	const id = req.params.id as string
 	const post = await prisma.post.findUnique({
 		where: { id },
 		include: {
@@ -67,42 +71,51 @@ const getPost: RequestHandler = async (req, res) => {
 			author: true,
 			_count: {
 				select: {
-					likedBy: true,
+					likedBy: {
+						where: {
+							NOT: where
+						}
+					},
 					comments: true
 				}
 			},
 			likedBy: {
-				where: {
-					id: user.id
-				}
+				where
 			}
 		}
 	})
 
-	res.json(post)
+	if (post === null) {
+		res.status(404).send('Not found')
+		return
+	}
+
+	const refined = refinePost(post)
+	res.json(refined)
 }
 
 const createComment: RequestHandler = async (req, res) => {
 	const user = req.user as UserWithIdentities
 	const postId = req.params.id as string
 
-	const { content } = matchedData<CommentData>(req)
+	const { comment } = matchedData<CommentData>(req)
 	await prisma.comment.create({
 		data: {
 			id: createId(),
-			content,
+			content: comment,
 			postId,
 			authorId: user.id
 		}
 	})
 
-	res.json(true)
+	res.status(201).send('Success')
 }
 
 const getComments: RequestHandler = async (req, res) => {
-	const user = req.user as UserWithIdentities
-	const postId = req.params.id as string
+	const user = req.user as PossibleUser
+	const likedBy = user ? { where: { id: user.id } } : {}
 
+	const postId = req.params.id as string
 	const comments = await prisma.comment.findMany({
 		where: { postId },
 		include: {
@@ -112,15 +125,12 @@ const getComments: RequestHandler = async (req, res) => {
 					likedBy: true
 				}
 			},
-			likedBy: {
-				where: {
-					id: user.id
-				}
-			}
+			likedBy
 		}
 	})
 
-	res.json(comments)
+	const refined = comments.map(refineComment)
+	res.json(refined)
 }
 
 const changeLike = (
@@ -147,7 +157,7 @@ const changeLike = (
 			}
 		})
 
-		res.json(true)
+		res.status(202).send('Success')
 	}
 
 	return change

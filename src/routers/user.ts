@@ -9,7 +9,7 @@ import {
 } from '../controllers/user'
 import { validateAvatar, validateFinal } from '../controllers/validate'
 import { optional } from '../lib/validator'
-import { jwt } from '../passport/passport'
+import { jwt, jwtOptional } from '../passport/passport'
 
 const get = [jwt, getSelf]
 const put = [
@@ -20,7 +20,7 @@ const put = [
 ]
 
 const putAvatar = [jwt, validateAvatar, validateFinal, updateAvatar]
-const getId = [getUser]
+const getId = [jwtOptional, getUser]
 
 const putId = [jwt, follow]
 const deleteId = [jwt, unfollow]

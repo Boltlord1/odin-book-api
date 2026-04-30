@@ -5,21 +5,21 @@ import {
 	createPost,
 	getComments,
 	getPost,
+	getPosts,
 	likeComment,
 	likePost,
 	unlikeComment,
 	unlikePost
 } from '../controllers/post'
-import { getPosts } from '../controllers/user'
 import {
 	validateBody,
 	validateFinal,
 	validateImages
 } from '../controllers/validate'
-import { content, title } from '../lib/validator'
-import { jwt } from '../passport/passport'
+import { comment, content, title } from '../lib/validator'
+import { jwt, jwtOptional } from '../passport/passport'
 
-const get = [getPosts]
+const get = [jwtOptional, getPosts]
 const post = [
 	jwt,
 	validateImages,
@@ -31,9 +31,9 @@ const post = [
 	uploadImages
 ]
 
-const getId = [getPost]
-const getIdComment = [getComments]
-const postId = [jwt, content, validateBody, validateFinal, createComment]
+const getId = [jwtOptional, getPost]
+const getIdComment = [jwtOptional, getComments]
+const postId = [jwt, comment, validateBody, validateFinal, createComment]
 
 const putId = [jwt, likePost]
 const deleteId = [jwt, unlikePost]
@@ -49,7 +49,7 @@ router.get('/:id', getId)
 router.post('/:id', postId)
 
 router.get('/:id', getId)
-router.post('/:id/comment', getIdComment)
+router.get('/:id/comment', getIdComment)
 router.post('/:id', postId)
 
 router.put('/:id/', putId)

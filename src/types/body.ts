@@ -31,7 +31,7 @@ interface PostData {
 }
 
 interface CommentData {
-	content: string
+	comment: string
 }
 
 interface EmailData {

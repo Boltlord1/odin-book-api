@@ -35,7 +35,8 @@ model Identity {
   id       String
   user     User     @relation(fields: [userId], references: [id])
   userId   String
-  data     Json?
+  /// [IdentityDataType]
+  data     Json
 
   @@id(name: "providerId", [provider, id])
   @@unique(name: "connection", [userId, provider])

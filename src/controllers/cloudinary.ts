@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express'
 import { avatar, destroy, images, url } from '../lib/cloudinary'
 import createId from '../lib/cuid2'
 import prisma from '../lib/primsa'
-import { frontendUrl } from '../lib/variables'
+import { refineSelf } from '../lib/refine'
 import type { UserWithIdentities } from '../types/prisma'
 import type {
 	AvatarRequest,
@@ -71,14 +71,15 @@ const updateAvatar: RequestHandler = async (req, res) => {
 	}
 
 	const user = req.user as UserWithIdentities
-	await prisma.user.update({
+	const updated = await prisma.user.update({
 		where: { id: user.id },
 		data: { avatar: result },
 		include: { identities: true }
 	})
 	await destroy(user.avatar)
 
-	res.json(user)
+	const refined = refineSelf(updated)
+	res.json(refined)
 }
 
 export { updateAvatar, uploadAuto, uploadAvatar, uploadImages }
