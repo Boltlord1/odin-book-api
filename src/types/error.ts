@@ -1,12 +1,12 @@
 interface ClientError {
-	type: 'client'
-	name: string
-	msg: string
+  msg: string
+  name: string
+  type: 'client'
 }
 
 interface ServerError {
-	type: 'server'
-	msg: string
+  msg: string
+  type: 'server'
 }
 
 export type { ClientError, ServerError }

@@ -12,7 +12,12 @@ import userRouter from './routers/user'
 const app = express()
 
 app.use(cookieParser())
-app.use(cors({ origin: `${frontendUrl}`, credentials: true }))
+app.use(
+  cors({
+    origin: `${frontendUrl}`,
+    credentials: true
+  })
+)
 app.use(express.json())
 app.use(passport.initialize())
 app.use(validateInitial)
@@ -22,10 +27,10 @@ app.use('/post', postRouter)
 app.use('/user', userRouter)
 
 const port = process.env.PORT ?? '3000'
-app.listen(port, (err) => {
-	if (err) {
-		console.log(err)
-		return
-	}
-	console.log(`Odin Book listening on port ${port}`)
+app.listen(port, err => {
+  if (err) {
+    console.log(err)
+    return
+  }
+  console.log(`Odin Book listening on port ${port}`)
 })

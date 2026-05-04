@@ -1,51 +1,51 @@
 interface LogInData {
-	username: string
-	password: string
+  password: string
+  username: string
 }
 
 interface RegisterData {
-	username: string
-	display: string
-	email: string
-	password: string
+  display: string
+  email: string
+  password: string
+  username: string
 }
 
 interface OauthData {
-	username: string
-	display: string
+  display: string
+  username: string
 }
 
 interface UpdateBody {
-	username: string
-	display: string
+  display: string
+  username: string
 }
 
 interface UpdateData {
-	name?: string
-	display?: string
+  display?: string
+  name?: string
 }
 
 interface PostData {
-	title: string
-	content: string
+  content: string
+  title: string
 }
 
 interface CommentData {
-	comment: string
+  content: string
 }
 
 interface EmailData {
-	email: string
-	password: string
+  email: string
+  password: string
 }
 
 export type {
-	CommentData,
-	EmailData,
-	LogInData,
-	OauthData,
-	PostData,
-	RegisterData,
-	UpdateBody,
-	UpdateData
+  CommentData,
+  EmailData,
+  LogInData,
+  OauthData,
+  PostData,
+  RegisterData,
+  UpdateBody,
+  UpdateData
 }

@@ -4,25 +4,25 @@ import type { ClientError, ServerError } from './error'
 type ReqError = ClientError | ServerError
 
 interface AvatarRequest extends Request {
-	avatar?: string
+  avatar?: string
 }
 
 interface UserIdRequest extends Request {
-	userId?: string
+  userId?: string
 }
 
 interface PostRequest extends Request {
-	postId?: string
+  postId?: string
 }
 
 interface ErrorRequest extends Request {
-	sizeError?: ReqError | undefined
+  sizeError?: ReqError | undefined
 }
 
 export type {
-	AvatarRequest,
-	ErrorRequest,
-	PostRequest,
-	ReqError,
-	UserIdRequest
+  AvatarRequest,
+  ErrorRequest,
+  PostRequest,
+  ReqError,
+  UserIdRequest
 }

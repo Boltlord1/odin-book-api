@@ -2,18 +2,18 @@ import type { Provider } from '../../generated/prisma/enums'
 import type { OauthIdentity } from './prisma'
 
 interface LogInPayload {
-	type: 'login'
-	id: string
-	iat: number
+  iat: number
+  id: string
+  type: 'login'
 }
 
 interface TempPayload {
-	type: 'temp'
-	id: string
-	avatar: string
-	provider: Provider
-	data: OauthIdentity
-	iat: number
+  avatar: string
+  data: OauthIdentity
+  iat: number
+  id: string
+  provider: Provider
+  type: 'temp'
 }
 
 type Payload = LogInPayload | TempPayload

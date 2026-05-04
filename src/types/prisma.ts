@@ -1,59 +1,93 @@
 import type { Prisma } from '../../generated/prisma/client'
 
 type UserWithIdentities = Prisma.UserGetPayload<{
-	include: { identities: true }
+  include: {
+    identities: true
+  }
 }>
 type PossibleUser = UserWithIdentities | undefined
 
-type PostWithUserImagesAndLikes = Prisma.PostGetPayload<{
-	include: {
-		images: true
-		author: true
-		_count: {
-			select: {
-				comments: true
-				likedBy: true
-			}
-		}
-		likedBy: true
-	}
+type PostWithUserImagesAndCounts = Prisma.PostGetPayload<{
+  include: {
+    images: true
+    author: true
+    _count: {
+      select: {
+        comments: true
+        likedBy: true
+      }
+    }
+    likedBy: true
+  }
 }>
 
-type CommentWithUserAndLikes = Prisma.CommentGetPayload<{
-	include: {
-		author: true
-		likedBy: true
-		_count: {
-			select: {
-				likedBy: true
-			}
-		}
-	}
+type CommentWithUserAndCounts = Prisma.CommentGetPayload<{
+  include: {
+    author: true
+    likedBy: true
+    _count: {
+      select: {
+        likedBy: true
+      }
+    }
+  }
+}>
+
+type UserWithIdentitiesAndCounts = Prisma.UserGetPayload<{
+  include: {
+    identities: true
+    _count: {
+      select: {
+        posts: true
+        followers: true
+        follows: true
+      }
+    }
+  }
+}>
+
+type UserWithCounts = Prisma.UserGetPayload<{
+  include: {
+    _count: {
+      select: {
+        posts: true
+        followers: true
+        follows: true
+      }
+    }
+    followers: {
+      where: {
+        id: string
+      }
+    }
+  }
 }>
 
 interface EmailIdentity {
-	hash: string
-	verified: boolean
+  hash: string
+  verified: boolean
 }
 
 interface GithubIdentity {
-	username: string
-	url: string
+  url: string
+  username: string
 }
 
 interface GoogleIdentity {
-	email: string
+  email: string
 }
 
 type OauthIdentity = GithubIdentity | GoogleIdentity
 
 export type {
-	CommentWithUserAndLikes,
-	EmailIdentity,
-	GithubIdentity,
-	GoogleIdentity,
-	OauthIdentity,
-	PossibleUser,
-	PostWithUserImagesAndLikes,
-	UserWithIdentities
+  CommentWithUserAndCounts,
+  EmailIdentity,
+  GithubIdentity,
+  GoogleIdentity,
+  OauthIdentity,
+  PossibleUser,
+  PostWithUserImagesAndCounts,
+  UserWithCounts,
+  UserWithIdentities,
+  UserWithIdentitiesAndCounts
 }

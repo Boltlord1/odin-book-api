@@ -1,24 +1,45 @@
-import type { Image, User } from '../../generated/prisma/client'
+import type { Identity, Image, User } from '../../generated/prisma/client'
+
+interface UserData {
+  avatar: string
+  display: string
+  id: string
+  name: string
+}
+
+interface ProfileData extends UserData {
+  followed: boolean
+  followers: number
+  follows: number
+  posts: number
+}
+
+interface SelfData extends UserData {
+  followers: number
+  follows: number
+  identities: Identity[]
+  posts: number
+}
 
 interface PostData {
-	id: string
-	title: string
-	content: string | null
-	createdAt: Date
-	images: Image[]
-	author: User
-	comments: number
-	likes: number
-	liked: boolean
+  author: User
+  comments: number
+  content: string | null
+  createdAt: Date
+  id: string
+  images: Image[]
+  liked: boolean
+  likes: number
+  title: string
 }
 
 interface CommentData {
-	id: string
-	content: string
-	createdAt: Date
-	author: User
-	likes: number
-	liked: boolean
+  author: User
+  content: string
+  createdAt: Date
+  id: string
+  liked: boolean
+  likes: number
 }
 
-export type { CommentData, PostData }
+export type { CommentData, PostData, ProfileData, SelfData }
