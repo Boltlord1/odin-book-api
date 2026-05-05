@@ -4,6 +4,7 @@ import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 import { refineComment, refinePost } from '../lib/refine'
 import { frontendUrl } from '../lib/variables'
+import postGetter from '../prisma/post'
 import type { CommentData, PostData } from '../types/body'
 import type { PossibleUser, UserWithIdentities } from '../types/prisma'
 import type { PostRequest } from '../types/request'
@@ -33,71 +34,23 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
 }
 
 const getPosts: RequestHandler = async (req, res) => {
-  const user = req.user as UserWithIdentities
-  const where = user
-    ? {
-        id: user.id
-      }
-    : {}
+  const user = req.user as PossibleUser
+  const sort = req.query.sort || 'recent'
 
-  const posts = await prisma.post.findMany({
-    orderBy: {
-      createdAt: 'desc'
-    },
-    include: {
-      images: true,
-      author: true,
-      _count: {
-        select: {
-          likedBy: {
-            where: {
-              NOT: where
-            }
-          },
-          comments: true
-        }
-      },
-      likedBy: {
-        where
-      }
-    }
-  })
+  if (typeof sort !== 'string') {
+    res.status(400).send('Invalid query')
+    return
+  }
 
+  const posts = await postGetter.many(sort, user?.id)
   const refined = posts.map(refinePost)
   res.json(refined)
 }
 
 const getPost: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
-  const where = user
-    ? {
-        id: user.id
-      }
-    : {}
-
-  const id = req.params.id as string
-  const post = await prisma.post.findUnique({
-    where: {
-      id
-    },
-    include: {
-      images: true,
-      author: true,
-      _count: {
-        select: {
-          likedBy: {
-            where: {
-              NOT: where
-            }
-          },
-          comments: true
-        }
-      },
-      likedBy: {
-        where
-      }
-    }
-  })
+  const postId = req.params.id as string
+  const post = await postGetter.unique(postId, user?.id)
 
   if (post === null) {
     res.status(404).send('Not found')
@@ -130,33 +83,15 @@ const createComment: RequestHandler = async (req, res) => {
 
 const getComments: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
-  const likedBy = user
-    ? {
-        where: {
-          id: user.id
-        }
-      }
-    : {}
-
   const postId = req.params.id as string
-  const comments = await prisma.comment.findMany({
-    orderBy: {
-      createdAt: 'asc'
-    },
-    where: {
-      postId
-    },
-    include: {
-      author: true,
-      _count: {
-        select: {
-          likedBy: true
-        }
-      },
-      likedBy
-    }
-  })
+  const sort = req.query.sort || 'recent'
 
+  if (typeof sort !== 'string') {
+    res.status(400).send('Invalid query')
+    return
+  }
+
+  const comments = await postGetter.comments(postId, sort, user?.id)
   const refined = comments.map(refineComment)
   res.json(refined)
 }

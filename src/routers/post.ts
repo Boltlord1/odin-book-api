@@ -19,11 +19,11 @@ import {
 import { comment, content, title } from '../lib/validator'
 import { jwt, jwtOptional } from '../passport/passport'
 
-const get = [
-  jwtOptional,
-  getPosts
-]
-const post = [
+const router = Router()
+
+router.get('/', jwtOptional, getPosts)
+router.post(
+  '/',
   jwt,
   validateImages,
   title,
@@ -32,56 +32,15 @@ const post = [
   validateFinal,
   createPost,
   uploadImages
-]
+)
 
-const getId = [
-  jwtOptional,
-  getPost
-]
-const getIdComment = [
-  jwtOptional,
-  getComments
-]
-const postId = [
-  jwt,
-  comment,
-  validateBody,
-  validateFinal,
-  createComment
-]
+router.get('/:id', jwtOptional, getPost)
+router.get('/:id/comment', jwtOptional, getComments)
+router.post('/:id', jwt, comment, validateBody, validateFinal, createComment)
 
-const putId = [
-  jwt,
-  likePost
-]
-const deleteId = [
-  jwt,
-  unlikePost
-]
-const putIdComment = [
-  jwt,
-  likeComment
-]
-const deleteIdComment = [
-  jwt,
-  unlikeComment
-]
-
-const router = Router()
-
-router.get('/', get)
-router.post('/', post)
-
-router.get('/:id', getId)
-router.post('/:id', postId)
-
-router.get('/:id', getId)
-router.get('/:id/comment', getIdComment)
-router.post('/:id', postId)
-
-router.put('/:id/', putId)
-router.delete('/:id/', deleteId)
-router.put('/:id/:comment', putIdComment)
-router.delete('/:id/:comment', deleteIdComment)
+router.post('/:id/like', jwt, likePost)
+router.delete('/:id/like', jwt, unlikePost)
+router.post('/:id/like/:comment', jwt, likeComment)
+router.delete('/:id/like/:comment', jwt, unlikeComment)
 
 export default router

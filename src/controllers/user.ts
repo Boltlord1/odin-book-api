@@ -4,6 +4,7 @@ import { matchedData } from 'express-validator'
 import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 import { refinePost, refineSelf, refineUser } from '../lib/refine'
+import postGetter from '../prisma/post'
 import type {
   EmailData,
   RegisterData,
@@ -176,38 +177,15 @@ const getUser: RequestHandler = async (req, res) => {
 
 const getPosts: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
-  const where = user
-    ? {
-        id: user.id
-      }
-    : {}
-
   const authorId = req.params.id as string
-  const posts = await prisma.post.findMany({
-    where: {
-      authorId
-    },
-    orderBy: {
-      createdAt: 'desc'
-    },
-    include: {
-      images: true,
-      author: true,
-      _count: {
-        select: {
-          comments: true,
-          likedBy: {
-            where: {
-              NOT: where
-            }
-          }
-        }
-      },
-      likedBy: {
-        where
-      }
-    }
-  })
+  const sort = req.query.sort || 'recent'
+
+  if (typeof sort !== 'string') {
+    res.status(400).send('Invalid query')
+    return
+  }
+
+  const posts = await postGetter.many(sort, user?.id, authorId)
 
   const refined = posts.map(refinePost)
   res.json(refined)
