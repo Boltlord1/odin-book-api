@@ -33,7 +33,7 @@ interface PostData {
   title: string
 }
 
-interface CommentData {
+interface ReplyData {
   author: User
   content: string
   createdAt: Date
@@ -42,4 +42,8 @@ interface CommentData {
   likes: number
 }
 
-export type { CommentData, PostData, ProfileData, SelfData }
+interface CommentData extends ReplyData {
+  replies: ReplyData[]
+}
+
+export type { CommentData, PostData, ProfileData, ReplyData, SelfData }

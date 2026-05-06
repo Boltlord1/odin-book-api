@@ -7,7 +7,7 @@ type UserWithIdentities = Prisma.UserGetPayload<{
 }>
 type PossibleUser = UserWithIdentities | undefined
 
-type PostWithUserImagesAndCounts = Prisma.PostGetPayload<{
+type RawPost = Prisma.PostGetPayload<{
   include: {
     images: true
     author: true
@@ -21,7 +21,30 @@ type PostWithUserImagesAndCounts = Prisma.PostGetPayload<{
   }
 }>
 
-type CommentWithUserAndCounts = Prisma.CommentGetPayload<{
+type RawComment = Prisma.CommentGetPayload<{
+  include: {
+    author: true
+    replies: {
+      include: {
+        author: true
+        likedBy: true
+        _count: {
+          select: {
+            likedBy: true
+          }
+        }
+      }
+    }
+    likedBy: true
+    _count: {
+      select: {
+        likedBy: true
+      }
+    }
+  }
+}>
+
+type RawReply = Prisma.ReplyGetPayload<{
   include: {
     author: true
     likedBy: true
@@ -33,7 +56,7 @@ type CommentWithUserAndCounts = Prisma.CommentGetPayload<{
   }
 }>
 
-type UserWithIdentitiesAndCounts = Prisma.UserGetPayload<{
+type RawSelf = Prisma.UserGetPayload<{
   include: {
     identities: true
     _count: {
@@ -46,7 +69,7 @@ type UserWithIdentitiesAndCounts = Prisma.UserGetPayload<{
   }
 }>
 
-type UserWithCounts = Prisma.UserGetPayload<{
+type RawProfile = Prisma.UserGetPayload<{
   include: {
     _count: {
       select: {
@@ -80,14 +103,15 @@ interface GoogleIdentity {
 type OauthIdentity = GithubIdentity | GoogleIdentity
 
 export type {
-  CommentWithUserAndCounts,
   EmailIdentity,
   GithubIdentity,
   GoogleIdentity,
   OauthIdentity,
   PossibleUser,
-  PostWithUserImagesAndCounts,
-  UserWithCounts,
-  UserWithIdentities,
-  UserWithIdentitiesAndCounts
+  RawComment,
+  RawPost,
+  RawProfile,
+  RawReply,
+  RawSelf,
+  UserWithIdentities
 }

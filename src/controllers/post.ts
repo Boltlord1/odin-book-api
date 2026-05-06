@@ -2,10 +2,10 @@ import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
-import { refineComment, refinePost } from '../lib/refine'
+import { refinePost } from '../lib/refine'
 import { frontendUrl } from '../lib/variables'
 import postGetter from '../prisma/post'
-import type { CommentData, PostData } from '../types/body'
+import type { PostData } from '../types/body'
 import type { PossibleUser, UserWithIdentities } from '../types/prisma'
 import type { PostRequest } from '../types/request'
 
@@ -19,6 +19,9 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
       title,
       content: content || null,
       authorId: user.id
+    },
+    select: {
+      id: true
     }
   })
 
@@ -61,84 +64,4 @@ const getPost: RequestHandler = async (req, res) => {
   res.json(refined)
 }
 
-const createComment: RequestHandler = async (req, res) => {
-  const user = req.user as UserWithIdentities
-  const postId = req.params.id as string
-
-  const { content } = matchedData<CommentData>(req)
-  const comment = await prisma.comment.create({
-    data: {
-      id: shortId(),
-      content,
-      postId,
-      authorId: user.id
-    },
-    include: {
-      author: true
-    }
-  })
-
-  res.status(201).json(comment)
-}
-
-const getComments: RequestHandler = async (req, res) => {
-  const user = req.user as PossibleUser
-  const postId = req.params.id as string
-  const sort = req.query.sort || 'recent'
-
-  if (typeof sort !== 'string') {
-    res.status(400).send('Invalid query')
-    return
-  }
-
-  const comments = await postGetter.comments(postId, sort, user?.id)
-  const refined = comments.map(refineComment)
-  res.json(refined)
-}
-
-const changeLike = (
-  type: 'post' | 'comment',
-  action: 'connect' | 'disconnect'
-) => {
-  const change: RequestHandler = async (req, res) => {
-    const user = req.user as UserWithIdentities
-    const postId = req.params.id as string
-    const commentId = req.params.comment as string
-
-    const row = type === 'post' ? 'likedPosts' : 'likedComments'
-    const id = type === 'post' ? postId : commentId
-    await prisma.user.update({
-      where: {
-        id: user.id
-      },
-      data: {
-        [`${row}`]: {
-          [`${action}`]: {
-            id
-          }
-        }
-      }
-    })
-
-    res.status(202).send('Success')
-  }
-
-  return change
-}
-
-const likePost = changeLike('post', 'connect')
-const unlikePost = changeLike('post', 'disconnect')
-const likeComment = changeLike('comment', 'connect')
-const unlikeComment = changeLike('comment', 'disconnect')
-
-export {
-  createComment,
-  createPost,
-  getComments,
-  getPost,
-  getPosts,
-  likeComment,
-  likePost,
-  unlikeComment,
-  unlikePost
-}
+export { createPost, getPost, getPosts }

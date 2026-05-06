@@ -23,9 +23,11 @@ model User {
   avatar        String     @default("odin-book/avatar/default")
   posts         Post[]     @relation("author")
   comments      Comment[]
+  replies       Reply[]
   identities    Identity[]
   likedPosts    Post[]     @relation("liked_posts")
   likedComments Comment[]  @relation("liked_comments")
+  likedReplies  Reply[]    @relation("liked_replies")
   follows       User[]     @relation("follows")
   followers     User[]     @relation("follows")
 }
@@ -77,5 +79,17 @@ model Comment {
   authorId  String
   post      Post     @relation(fields: [postId], references: [id])
   postId    String
+  replies   Reply[]
   likedBy   User[]   @relation("liked_comments")
+}
+
+model Reply {
+  id        String   @id
+  content   String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  comment   Comment  @relation(fields: [commentId], references: [id])
+  commentId String
+  likedBy   User[]   @relation("liked_replies")
 }

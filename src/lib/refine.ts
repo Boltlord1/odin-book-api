@@ -2,16 +2,18 @@ import type {
   CommentData,
   PostData,
   ProfileData,
+  ReplyData,
   SelfData
 } from '../types/data'
 import type {
-  CommentWithUserAndCounts,
-  PostWithUserImagesAndCounts,
-  UserWithCounts,
-  UserWithIdentitiesAndCounts
+  RawComment,
+  RawPost,
+  RawProfile,
+  RawReply,
+  RawSelf
 } from '../types/prisma'
 
-function refinePost(raw: PostWithUserImagesAndCounts) {
+function refinePost(raw: RawPost) {
   const refined: PostData = {
     ...raw,
     comments: raw._count.comments,
@@ -22,8 +24,19 @@ function refinePost(raw: PostWithUserImagesAndCounts) {
   return refined
 }
 
-function refineComment(raw: CommentWithUserAndCounts) {
+function refineComment(raw: RawComment) {
   const refined: CommentData = {
+    ...raw,
+    likes: raw._count.likedBy,
+    liked: raw.likedBy.length > 0,
+    replies: raw.replies.map(refineReply)
+  }
+
+  return refined
+}
+
+function refineReply(raw: RawReply) {
+  const refined: ReplyData = {
     ...raw,
     likes: raw._count.likedBy,
     liked: raw.likedBy.length > 0
@@ -32,7 +45,7 @@ function refineComment(raw: CommentWithUserAndCounts) {
   return refined
 }
 
-function refineSelf(raw: UserWithIdentitiesAndCounts) {
+function refineSelf(raw: RawSelf) {
   const refined: SelfData = {
     ...raw,
     posts: raw._count.posts,
@@ -50,7 +63,7 @@ function refineSelf(raw: UserWithIdentitiesAndCounts) {
   return refined
 }
 
-function refineUser(raw: UserWithCounts) {
+function refineUser(raw: RawProfile) {
   const refined: ProfileData = {
     ...raw,
     posts: raw._count.posts,
@@ -62,4 +75,4 @@ function refineUser(raw: UserWithCounts) {
   return refined
 }
 
-export { refineComment, refinePost, refineSelf, refineUser }
+export { refineComment, refinePost, refineReply, refineSelf, refineUser }
