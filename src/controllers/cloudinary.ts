@@ -25,14 +25,7 @@ const uploadAvatar: RequestHandler = async (req: UserIdRequest, res, next) => {
   }
 
   const id = req.userId as string
-  await prisma.user.update({
-    where: {
-      id
-    },
-    data: {
-      avatar: result
-    }
-  })
+  await prisma.user.update({ where: { id }, data: { avatar: result } })
   next()
 }
 
@@ -59,11 +52,7 @@ const uploadImages: RequestHandler = async (req: PostRequest, res) => {
 
   const postId = req.postId as string
   await prisma.image.createMany({
-    data: result.map(r => ({
-      ...r,
-      postId,
-      id: shortId()
-    }))
+    data: result.map((r) => ({ ...r, postId, id: shortId() }))
   })
 
   res.json(postId)
@@ -80,21 +69,11 @@ const updateAvatar: RequestHandler = async (req, res) => {
 
   const user = req.user as UserWithIdentities
   const updated = await prisma.user.update({
-    where: {
-      id: user.id
-    },
-    data: {
-      avatar: result
-    },
+    where: { id: user.id },
+    data: { avatar: result },
     include: {
       identities: true,
-      _count: {
-        select: {
-          posts: true,
-          follows: true,
-          followers: true
-        }
-      }
+      _count: { select: { posts: true, follows: true, followers: true } }
     }
   })
   await destroy(user.avatar)

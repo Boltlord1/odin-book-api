@@ -28,16 +28,8 @@ const changeLike = (type: type, action: 'connect' | 'disconnect') => {
     }
 
     await prisma.user.update({
-      where: {
-        id: user.id
-      },
-      data: {
-        [`${row}`]: {
-          [`${action}`]: {
-            id
-          }
-        }
-      }
+      where: { id: user.id },
+      data: { [`${row}`]: { [`${action}`]: { id } } }
     })
 
     res.status(202).send('Success')

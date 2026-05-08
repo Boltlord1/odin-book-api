@@ -1,9 +1,7 @@
 import type { Prisma } from '../../generated/prisma/client'
 
 type UserWithIdentities = Prisma.UserGetPayload<{
-  include: {
-    identities: true
-  }
+  include: { identities: true }
 }>
 type PossibleUser = UserWithIdentities | undefined
 
@@ -11,12 +9,7 @@ type RawPost = Prisma.PostGetPayload<{
   include: {
     images: true
     author: true
-    _count: {
-      select: {
-        comments: true
-        likedBy: true
-      }
-    }
+    _count: { select: { comments: true; likedBy: true } }
     likedBy: true
   }
 }>
@@ -25,11 +18,7 @@ type RawCommentWithoutReplies = Prisma.CommentGetPayload<{
   include: {
     author: true
     likedBy: true
-    _count: {
-      select: {
-        likedBy: true
-      }
-    }
+    _count: { select: { likedBy: true } }
   }
 }>
 
@@ -41,41 +30,21 @@ type RawReply = Prisma.ReplyGetPayload<{
   include: {
     author: true
     likedBy: true
-    _count: {
-      select: {
-        likedBy: true
-      }
-    }
+    _count: { select: { likedBy: true } }
   }
 }>
 
 type RawSelf = Prisma.UserGetPayload<{
   include: {
     identities: true
-    _count: {
-      select: {
-        posts: true
-        followers: true
-        follows: true
-      }
-    }
+    _count: { select: { posts: true; followers: true; follows: true } }
   }
 }>
 
 type RawProfile = Prisma.UserGetPayload<{
   include: {
-    _count: {
-      select: {
-        posts: true
-        followers: true
-        follows: true
-      }
-    }
-    followers: {
-      where: {
-        id: string
-      }
-    }
+    _count: { select: { posts: true; followers: true; follows: true } }
+    followers: { where: { id: string } }
   }
 }>
 
@@ -83,11 +52,7 @@ type RawChat = Prisma.ChatGetPayload<{
   include: {
     users: true
     messages: true
-    _count: {
-      select: {
-        messages: true
-      }
-    }
+    _count: { select: { messages: true } }
   }
 }>
 

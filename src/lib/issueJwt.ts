@@ -6,11 +6,7 @@ import type { LogInPayload, TempPayload } from '../types/temp'
 const PRIV_KEY = `${process.env.PRIV_KEY}`.replace(/\\n/g, '\n')
 
 function issueJwt(id: string) {
-  const payload: LogInPayload = {
-    type: 'login',
-    id,
-    iat: Date.now()
-  }
+  const payload: LogInPayload = { type: 'login', id, iat: Date.now() }
 
   const token = jsonWebToken.sign(payload, PRIV_KEY, {
     expiresIn: '7d',

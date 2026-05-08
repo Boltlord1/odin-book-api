@@ -16,10 +16,7 @@ import {
 import { display, email, password, required, username } from '../lib/validator'
 import { github, google, jwt, jwtOptional, jwtTemp } from '../passport/passport'
 
-const getVerify = [
-  jwt,
-  verify
-]
+const getVerify = [jwt, verify]
 const postSignUp = [
   validateAvatar,
   username,
@@ -41,17 +38,9 @@ const postLogIn = [
   logIn
 ]
 
-const getLogOut = [
-  logOut
-]
-const getGoogle = [
-  google
-]
-const getGoogleCallback = [
-  jwtOptional,
-  google,
-  googleCallback
-]
+const getLogOut = [logOut]
+const getGoogle = [google]
+const getGoogleCallback = [jwtOptional, google, googleCallback]
 const postGoogleSignUp = [
   jwtTemp,
   username,
@@ -62,14 +51,8 @@ const postGoogleSignUp = [
   googleSignUp
 ]
 
-const getGithub = [
-  github
-]
-const getGithubCallback = [
-  jwtOptional,
-  github,
-  githubCallback
-]
+const getGithub = [github]
+const getGithubCallback = [jwtOptional, github, githubCallback]
 const postGithubSignUp = [
   jwtTemp,
   username,

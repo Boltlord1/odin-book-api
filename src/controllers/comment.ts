@@ -15,16 +15,8 @@ const createComment: RequestHandler = async (req, res) => {
   const data: CommentCreateInput = {
     id: shortId(),
     content,
-    post: {
-      connect: {
-        id: postId
-      }
-    },
-    author: {
-      connect: {
-        id: user.id
-      }
-    }
+    post: { connect: { id: postId } },
+    author: { connect: { id: user.id } }
   }
   const comment = await commentGetter.create(data)
 

@@ -6,23 +6,15 @@ function required(name: string, msg: string, min = 4) {
     .trim()
     .notEmpty()
     .withMessage(`${msg} is required`)
-    .isLength({
-      min,
-      max: 32
-    })
+    .isLength({ min, max: 32 })
     .withMessage(`${msg} must be between ${min} and 32 characters.`)
 }
 
 function optional(name: string, msg: string, min = 2) {
   return body(name)
     .trim()
-    .optional({
-      values: 'falsy'
-    })
-    .isLength({
-      min,
-      max: 32
-    })
+    .optional({ values: 'falsy' })
+    .isLength({ min, max: 32 })
     .withMessage(`${msg} must be between ${min} and 32 characters.`)
 }
 
@@ -35,14 +27,9 @@ const email = body('email')
   .withMessage('Email is required.')
   .isEmail()
   .withMessage('Invalid email text.')
-  .custom(async value => {
+  .custom(async (value) => {
     const user = await prisma.identity.findUnique({
-      where: {
-        providerId: {
-          provider: 'Email',
-          id: value
-        }
-      }
+      where: { providerId: { provider: 'Email', id: value } }
     })
 
     if (user !== null) {
@@ -55,10 +42,7 @@ const password = [
     .trim()
     .notEmpty()
     .withMessage('Password is required.')
-    .isLength({
-      min: 6,
-      max: 32
-    })
+    .isLength({ min: 6, max: 32 })
     .withMessage('Password must be between 6 and 32 characters.')
     .isStrongPassword({
       minLength: 6,
@@ -80,25 +64,19 @@ const title = body('title')
   .trim()
   .notEmpty()
   .withMessage('Post title is requied.')
-  .isLength({
-    max: 256
-  })
+  .isLength({ max: 256 })
   .withMessage('Title must be less than 256 characters.')
 
 const post = body('content')
   .trim()
-  .isLength({
-    max: 2000
-  })
+  .isLength({ max: 2000 })
   .withMessage('Post content must be less than 2000 characters.')
 
 const content = body('content')
   .trim()
   .notEmpty()
   .withMessage('Comment is requied.')
-  .isLength({
-    max: 512
-  })
+  .isLength({ max: 512 })
   .withMessage('Comment must be less than 500 characters.')
 
 export {

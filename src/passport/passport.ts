@@ -13,30 +13,19 @@ passport.use(googleStrategy)
 passport.use('jwt', jwtStrategy)
 passport.use('jwt-temp', jwtTempStrategy)
 
-const jwt = passport.authenticate('jwt', {
-  session: false
-})
-const jwtTemp = passport.authenticate('jwt-temp', {
-  session: false
-})
+const jwt = passport.authenticate('jwt', { session: false })
+const jwtTemp = passport.authenticate('jwt-temp', { session: false })
 
 const google = passport.authenticate('google', {
   session: false,
-  scope: [
-    'email',
-    'profile'
-  ]
+  scope: ['email', 'profile']
 })
-const github = passport.authenticate('github', {
-  session: false
-})
+const github = passport.authenticate('github', { session: false })
 
 const jwtOptional: RequestHandler = (req, res, next) => {
   passport.authenticate(
     'jwt',
-    {
-      session: false
-    },
+    { session: false },
     (_err: unknown, user: UserWithIdentities) => {
       if (user) {
         req.user = user

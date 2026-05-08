@@ -15,7 +15,7 @@
   },
   "javascript": {
     "formatter": {
-      "arrowParentheses": "asNeeded",
+      "arrowParentheses": "always",
       "bracketSameLine": false,
       "bracketSpacing": true,
       "quoteStyle": "single",
@@ -23,7 +23,7 @@
       "quoteProperties": "asNeeded",
       "semicolons": "asNeeded",
       "trailingCommas": "none",
-      "expand": "always"
+      "expand": "never"
     }
   }
 }

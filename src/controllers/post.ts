@@ -14,15 +14,8 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
 
   const { title, content } = matchedData<PostData>(req)
   const post = await prisma.post.create({
-    data: {
-      id: shortId(),
-      title,
-      content: content || null,
-      authorId: user.id
-    },
-    select: {
-      id: true
-    }
+    data: { id: shortId(), title, content: content || null, authorId: user.id },
+    select: { id: true }
   })
 
   const postId = post.id

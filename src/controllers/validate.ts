@@ -30,7 +30,7 @@ const validateBody: RequestHandler = (req, _res, next) => {
 const validateAvatar: RequestHandler = (req, res, next) => {
   const errors = req.errors
 
-  avatar(req, res, err => {
+  avatar(req, res, (err) => {
     if (err instanceof MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         const error = clientError('avatar', 'File size must be less than 5mb.')
@@ -56,7 +56,7 @@ const validateAvatar: RequestHandler = (req, res, next) => {
 const validateImages: RequestHandler = (req, res, next) => {
   const errors = req.errors
 
-  images(req, res, err => {
+  images(req, res, (err) => {
     if (err instanceof MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         const error = clientError(

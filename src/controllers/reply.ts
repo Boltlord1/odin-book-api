@@ -15,16 +15,8 @@ const createReply: RequestHandler = async (req, res) => {
   const data: ReplyCreateInput = {
     id: shortId(),
     content,
-    comment: {
-      connect: {
-        id: commentId
-      }
-    },
-    author: {
-      connect: {
-        id: user.id
-      }
-    }
+    comment: { connect: { id: commentId } },
+    author: { connect: { id: user.id } }
   }
 
   const reply = await commentGetter.reply(data)

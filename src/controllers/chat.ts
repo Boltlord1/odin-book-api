@@ -10,32 +10,11 @@ const getChats: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
 
   const chats = await prisma.chat.findMany({
-    where: {
-      users: {
-        some: {
-          id: user.id
-        }
-      }
-    },
+    where: { users: { some: { id: user.id } } },
     include: {
-      messages: {
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 1
-      },
-      users: {
-        where: {
-          NOT: {
-            id: user.id
-          }
-        }
-      },
-      _count: {
-        select: {
-          messages: true
-        }
-      }
+      messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+      users: { where: { NOT: { id: user.id } } },
+      _count: { select: { messages: true } }
     }
   })
 
@@ -52,50 +31,20 @@ const getChat: RequestHandler = async (req, res) => {
     return
   }
 
-  const hash = [
-    user.id,
-    id
-  ]
-    .sort()
-    .join(':')
+  const hash = [user.id, id].sort().join(':')
 
   const chat = await prisma.chat.upsert({
-    where: {
-      hash
-    },
+    where: { hash },
     update: {},
     create: {
       id: shortId(),
       hash,
-      users: {
-        connect: [
-          {
-            id: user.id
-          },
-          {
-            id
-          }
-        ]
-      }
+      users: { connect: [{ id: user.id }, { id }] }
     },
     include: {
-      messages: {
-        orderBy: {
-          createdAt: 'desc'
-        }
-      },
-      users: {
-        where: {
-          NOT: {
-            id: user.id
-          }
-        }
-      },
-      _count: {
-        select: {
-          messages: true
-        }
-      }
+      messages: { orderBy: { createdAt: 'desc' } },
+      users: { where: { NOT: { id: user.id } } },
+      _count: { select: { messages: true } }
     }
   })
 
@@ -113,12 +62,7 @@ const createMessage: RequestHandler = async (req, res) => {
 
   const { content } = matchedData<ContentData>(req)
   const message = await prisma.message.create({
-    data: {
-      id: shortId(),
-      authorId: user.id,
-      chatId: id,
-      content
-    }
+    data: { id: shortId(), authorId: user.id, chatId: id, content }
   })
 
   const refined = refineMessage(message, user.id, true)

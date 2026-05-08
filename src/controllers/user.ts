@@ -21,21 +21,14 @@ import type { UserIdRequest } from '../types/request'
 const createUser: RequestHandler = async (req: UserIdRequest, _res, next) => {
   const { username, display, email, password } = matchedData<RegisterData>(req)
   const hashed = await hash(password, 10)
-  const data: EmailIdentity = {
-    hash: hashed,
-    verified: false
-  }
+  const data: EmailIdentity = { hash: hashed, verified: false }
   const user = await prisma.identity.create({
     data: {
       provider: 'Email',
       id: email,
       data,
       user: {
-        create: {
-          id: shortId(),
-          name: username,
-          display: display || username
-        }
+        create: { id: shortId(), name: username, display: display || username }
       }
     }
   })
@@ -58,19 +51,11 @@ const updateUser: RequestHandler = async (req, res) => {
   }
 
   const updated = await prisma.user.update({
-    where: {
-      id: user.id
-    },
+    where: { id: user.id },
     data,
     include: {
       identities: true,
-      _count: {
-        select: {
-          posts: true,
-          follows: true,
-          followers: true
-        }
-      }
+      _count: { select: { posts: true, follows: true, followers: true } }
     }
   })
 
@@ -80,7 +65,7 @@ const updateUser: RequestHandler = async (req, res) => {
 
 const connectEmail: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
-  const exists = user.identities.find(i => i.provider === 'Email')
+  const exists = user.identities.find((i) => i.provider === 'Email')
   if (exists) {
     res.send('Account already has an email.')
     return
@@ -88,18 +73,10 @@ const connectEmail: RequestHandler = async (req, res) => {
 
   const { email, password } = matchedData<EmailData>(req)
   const hashed = await hash(password, 10)
-  const data: EmailIdentity = {
-    hash: hashed,
-    verified: false
-  }
+  const data: EmailIdentity = { hash: hashed, verified: false }
 
   await prisma.identity.create({
-    data: {
-      provider: 'Email',
-      id: email,
-      data,
-      userId: user.id
-    }
+    data: { provider: 'Email', id: email, data, userId: user.id }
   })
 
   res.clearCookie('access_token')
@@ -110,18 +87,10 @@ const getSelf: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
 
   const self = await prisma.user.findUnique({
-    where: {
-      id: user.id
-    },
+    where: { id: user.id },
     include: {
       identities: true,
-      _count: {
-        select: {
-          posts: true,
-          follows: true,
-          followers: true
-        }
-      }
+      _count: { select: { posts: true, follows: true, followers: true } }
     }
   })
 
@@ -137,32 +106,20 @@ const getSelf: RequestHandler = async (req, res) => {
 
 const getUser: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
-  const where = user
-    ? {
-        id: user.id
-      }
-    : {}
+  const where = user ? { id: user.id } : {}
   const id = req.params.id as string
 
   const profile = await prisma.user.findUnique({
-    where: {
-      id
-    },
+    where: { id },
     include: {
       _count: {
         select: {
           posts: true,
           follows: true,
-          followers: {
-            where: {
-              NOT: where
-            }
-          }
+          followers: { where: { NOT: where } }
         }
       },
-      followers: {
-        where
-      }
+      followers: { where }
     }
   })
 

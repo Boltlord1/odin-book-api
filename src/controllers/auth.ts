@@ -23,28 +23,11 @@ const logIn: RequestHandler = async (req, res) => {
   const user = await prisma.user.findFirst({
     where: {
       OR: [
-        {
-          name: username
-        },
-        {
-          identities: {
-            some: {
-              AND: {
-                provider: 'Email',
-                id: username
-              }
-            }
-          }
-        }
+        { name: username },
+        { identities: { some: { AND: { provider: 'Email', id: username } } } }
       ]
     },
-    include: {
-      identities: {
-        where: {
-          provider: 'Email'
-        }
-      }
-    }
+    include: { identities: { where: { provider: 'Email' } } }
   })
 
   if (user === null || !user.identities[0]) {

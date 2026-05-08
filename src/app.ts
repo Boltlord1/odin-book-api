@@ -10,12 +10,7 @@ import router from './routers'
 const app = express()
 
 app.use(cookieParser())
-app.use(
-  cors({
-    origin: `${frontendUrl}`,
-    credentials: true
-  })
-)
+app.use(cors({ origin: `${frontendUrl}`, credentials: true }))
 app.use(express.json())
 app.use(passport.initialize())
 app.use(validateInitial)
@@ -23,7 +18,7 @@ app.use(validateInitial)
 app.use('/', router)
 
 const port = process.env.PORT ?? '3000'
-app.listen(port, err => {
+app.listen(port, (err) => {
   if (err) {
     console.log(err)
     return

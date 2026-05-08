@@ -11,22 +11,9 @@ const PostGetter = () => {
         images: true,
         author: true,
         _count: {
-          select: {
-            likedBy: {
-              where: {
-                NOT: {
-                  id: user
-                }
-              }
-            },
-            comments: true
-          }
+          select: { likedBy: { where: { NOT: { id: user } } }, comments: true }
         },
-        likedBy: {
-          where: {
-            id: user
-          }
-        }
+        likedBy: { where: { id: user } }
       }
 
       return include
@@ -35,17 +22,8 @@ const PostGetter = () => {
     const include: PostInclude = {
       images: true,
       author: true,
-      _count: {
-        select: {
-          likedBy: true,
-          comments: true
-        }
-      },
-      likedBy: {
-        where: {
-          id: ''
-        }
-      }
+      _count: { select: { likedBy: true, comments: true } },
+      likedBy: { where: { id: '' } }
     }
 
     return include
@@ -56,9 +34,7 @@ const PostGetter = () => {
       return {}
     }
 
-    const where = {
-      authorId
-    }
+    const where = { authorId }
 
     return where
   }
@@ -66,17 +42,13 @@ const PostGetter = () => {
   const getOrderBy = (sort: string) => {
     if (sort === 'top') {
       const orderBy: PostOrderByWithRelationInput = {
-        likedBy: {
-          _count: 'desc'
-        }
+        likedBy: { _count: 'desc' }
       }
 
       return orderBy
     }
 
-    const orderBy: PostOrderByWithRelationInput = {
-      createdAt: 'desc'
-    }
+    const orderBy: PostOrderByWithRelationInput = { createdAt: 'desc' }
 
     return orderBy
   }
@@ -85,31 +57,19 @@ const PostGetter = () => {
     const where = getWhere(authorId)
     const include = getInclude(user)
     const orderBy = getOrderBy(sort)
-    const posts = await prisma.post.findMany({
-      where,
-      include,
-      orderBy
-    })
+    const posts = await prisma.post.findMany({ where, include, orderBy })
 
     return posts
   }
 
   const unique = async (id: string, user?: string) => {
     const include = getInclude(user)
-    const post = await prisma.post.findUnique({
-      where: {
-        id
-      },
-      include
-    })
+    const post = await prisma.post.findUnique({ where: { id }, include })
 
     return post
   }
 
-  return {
-    many,
-    unique
-  }
+  return { many, unique }
 }
 
 const postGetter = PostGetter()

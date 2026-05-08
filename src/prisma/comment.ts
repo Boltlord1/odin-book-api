@@ -14,26 +14,10 @@ const CommentGetter = () => {
         author: true,
         replies: {
           include: getReplyInclude(user),
-          orderBy: {
-            createdAt: 'asc'
-          }
+          orderBy: { createdAt: 'asc' }
         },
-        _count: {
-          select: {
-            likedBy: {
-              where: {
-                NOT: {
-                  id: user
-                }
-              }
-            }
-          }
-        },
-        likedBy: {
-          where: {
-            id: user
-          }
-        }
+        _count: { select: { likedBy: { where: { NOT: { id: user } } } } },
+        likedBy: { where: { id: user } }
       }
 
       return include
@@ -41,22 +25,9 @@ const CommentGetter = () => {
 
     const include: CommentInclude = {
       author: true,
-      replies: {
-        include: getReplyInclude(),
-        orderBy: {
-          createdAt: 'asc'
-        }
-      },
-      _count: {
-        select: {
-          likedBy: true
-        }
-      },
-      likedBy: {
-        where: {
-          id: ''
-        }
-      }
+      replies: { include: getReplyInclude(), orderBy: { createdAt: 'asc' } },
+      _count: { select: { likedBy: true } },
+      likedBy: { where: { id: '' } }
     }
 
     return include
@@ -66,16 +37,8 @@ const CommentGetter = () => {
     if (user) {
       const include: ReplyInclude = {
         author: true,
-        _count: {
-          select: {
-            likedBy: true
-          }
-        },
-        likedBy: {
-          where: {
-            id: ''
-          }
-        }
+        _count: { select: { likedBy: true } },
+        likedBy: { where: { id: '' } }
       }
 
       return include
@@ -83,16 +46,8 @@ const CommentGetter = () => {
 
     const include: ReplyInclude = {
       author: true,
-      _count: {
-        select: {
-          likedBy: true
-        }
-      },
-      likedBy: {
-        where: {
-          id: ''
-        }
-      }
+      _count: { select: { likedBy: true } },
+      likedBy: { where: { id: '' } }
     }
 
     return include
@@ -101,17 +56,13 @@ const CommentGetter = () => {
   const getOrderBy = (sort: string) => {
     if (sort === 'top') {
       const orderBy: CommentOrderByWithRelationInput = {
-        likedBy: {
-          _count: 'desc'
-        }
+        likedBy: { _count: 'desc' }
       }
 
       return orderBy
     }
 
-    const orderBy: CommentOrderByWithRelationInput = {
-      createdAt: 'desc'
-    }
+    const orderBy: CommentOrderByWithRelationInput = { createdAt: 'desc' }
 
     return orderBy
   }
@@ -120,9 +71,7 @@ const CommentGetter = () => {
     const include = getInclude(user)
     const orderBy = getOrderBy(sort)
     const comments = await prisma.comment.findMany({
-      where: {
-        postId
-      },
+      where: { postId },
       include,
       orderBy
     })
@@ -132,29 +81,19 @@ const CommentGetter = () => {
 
   const create = async (data: CommentCreateInput) => {
     const include = getInclude()
-    const comment = await prisma.comment.create({
-      data,
-      include
-    })
+    const comment = await prisma.comment.create({ data, include })
 
     return comment
   }
 
   const reply = async (data: ReplyCreateInput) => {
     const include = getReplyInclude()
-    const reply = await prisma.reply.create({
-      data,
-      include
-    })
+    const reply = await prisma.reply.create({ data, include })
 
     return reply
   }
 
-  return {
-    create,
-    many,
-    reply
-  }
+  return { create, many, reply }
 }
 
 const commentGetter = CommentGetter()

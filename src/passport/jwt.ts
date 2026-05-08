@@ -12,9 +12,7 @@ const PUB_KEY = `${process.env.PUB_KEY}`.replace(/\\n/g, '\n')
 const options: Options = {
   jwtFromRequest: cookieExtractor,
   secretOrKey: PUB_KEY,
-  algorithms: [
-    'RS256'
-  ]
+  algorithms: ['RS256']
 }
 
 const verifyCallback: VerifyCallback = async (payload: Payload, done) => {
@@ -22,12 +20,8 @@ const verifyCallback: VerifyCallback = async (payload: Payload, done) => {
     return done(null, false)
   }
   const user = await prisma.user.findUnique({
-    where: {
-      id: payload.id
-    },
-    include: {
-      identities: true
-    }
+    where: { id: payload.id },
+    include: { identities: true }
   })
   if (user === null) {
     return done(null, false)

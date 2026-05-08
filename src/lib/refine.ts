@@ -97,7 +97,7 @@ function refineChat(raw: RawChat) {
   const refined: ChatData = {
     id: raw.id,
     messageCount: raw._count.messages,
-    messages: raw.messages.map(m => refineMessage(m, user.id)),
+    messages: raw.messages.map((m) => refineMessage(m, user.id)),
     user
   }
 

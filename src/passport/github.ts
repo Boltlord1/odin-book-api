@@ -27,12 +27,7 @@ const verifyCallback: VerifyFunctionWithRequest = async (
   done: VerifyCallback
 ) => {
   const verified = await prisma.identity.findUnique({
-    where: {
-      providerId: {
-        provider: 'Github',
-        id: profile.id
-      }
-    }
+    where: { providerId: { provider: 'Github', id: profile.id } }
   })
 
   if (verified) {
@@ -51,25 +46,14 @@ const verifyCallback: VerifyFunctionWithRequest = async (
     return
   }
 
-  const data: GithubIdentity = {
-    username,
-    url: profile.profileUrl
-  }
+  const data: GithubIdentity = { username, url: profile.profileUrl }
 
   const user = req.user as UserWithIdentities | undefined
   if (user) {
     const updated = await prisma.user.update({
-      where: {
-        id: user.id
-      },
+      where: { id: user.id },
       data: {
-        identities: {
-          create: {
-            provider: 'Github',
-            id: profile.id,
-            data
-          }
-        }
+        identities: { create: { provider: 'Github', id: profile.id, data } }
       }
     })
 

@@ -12,9 +12,7 @@ const PUB_KEY = `${process.env.PUB_KEY}`.replace(/\\n/g, '\n')
 const options: Options = {
   jwtFromRequest: tempCookieExtractor,
   secretOrKey: PUB_KEY,
-  algorithms: [
-    'RS256'
-  ]
+  algorithms: ['RS256']
 }
 
 const verifyCallback: VerifyCallback = (

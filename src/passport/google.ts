@@ -27,12 +27,7 @@ const verifyCallback = async (
   done: VerifyCallback
 ) => {
   const verified = await prisma.identity.findUnique({
-    where: {
-      providerId: {
-        provider: 'Google',
-        id: profile.id
-      }
-    }
+    where: { providerId: { provider: 'Google', id: profile.id } }
   })
 
   if (verified) {
@@ -53,24 +48,14 @@ const verifyCallback = async (
     return
   }
 
-  const data: GoogleIdentity = {
-    email: finalEmail
-  }
+  const data: GoogleIdentity = { email: finalEmail }
 
   const user = req.user as UserWithIdentities
   if (user) {
     const updated = await prisma.user.update({
-      where: {
-        id: user.id
-      },
+      where: { id: user.id },
       data: {
-        identities: {
-          create: {
-            provider: 'Google',
-            id: profile.id,
-            data
-          }
-        }
+        identities: { create: { provider: 'Google', id: profile.id, data } }
       }
     })
 

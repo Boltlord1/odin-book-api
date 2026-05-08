@@ -11,9 +11,6 @@ const longOptions: CookieOptions = {
   maxAge: 1000 * 60 * 60 * 24 * 7
 }
 
-const tempOptions: CookieOptions = {
-  ...longOptions,
-  maxAge: 1000 * 60 * 10
-}
+const tempOptions: CookieOptions = { ...longOptions, maxAge: 1000 * 60 * 10 }
 
 export { cookieExtractor, longOptions, tempCookieExtractor, tempOptions }

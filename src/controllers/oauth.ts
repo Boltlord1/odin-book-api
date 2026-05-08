@@ -48,11 +48,7 @@ const oauthSignUp = (provider: Provider) => {
             id: shortId(),
             name: username,
             display,
-            ...(avatar
-              ? {
-                  avatar
-                }
-              : {})
+            ...(avatar ? { avatar } : {})
           }
         }
       }

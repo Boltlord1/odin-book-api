@@ -5,11 +5,7 @@ const cloud_name = `${process.env.CLOUD_NAME}`
 const api_key = `${process.env.CLOUD_KEY}`
 const api_secret = `${process.env.CLOUD_SECRET}`
 
-cloudinary.config({
-  cloud_name,
-  api_key,
-  api_secret
-})
+cloudinary.config({ cloud_name, api_key, api_secret })
 
 const avatarFolder = `${process.env.AVATAR_FOLDER}`
 const postFolder = `${process.env.POST_FOLDER}`
@@ -49,11 +45,11 @@ const images = async (files: Express.Multer.File[]) => {
 
   const responses = await Promise.allSettled(promises)
 
-  const fulfilled = responses.filter(r => r.status === 'fulfilled')
-  const rejected = responses.filter(r => r.status === 'rejected')
+  const fulfilled = responses.filter((r) => r.status === 'fulfilled')
+  const rejected = responses.filter((r) => r.status === 'rejected')
 
   if (rejected.length > 0) {
-    const destroy = fulfilled.map(r =>
+    const destroy = fulfilled.map((r) =>
       cloudinary.uploader.destroy(r.value.public_id)
     )
     await Promise.all(destroy)
