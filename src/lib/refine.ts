@@ -1,11 +1,16 @@
+import type { Message, User } from '../../generated/prisma/client'
 import type {
+  ChatData,
+  ChatDataMinimal,
   CommentData,
+  MessageData,
   PostData,
   ProfileData,
   ReplyData,
   SelfData
 } from '../types/data'
 import type {
+  RawChat,
   RawComment,
   RawPost,
   RawProfile,
@@ -75,4 +80,50 @@ function refineUser(raw: RawProfile) {
   return refined
 }
 
-export { refineComment, refinePost, refineReply, refineSelf, refineUser }
+function refineMessage(raw: Message, id: string, bool = false) {
+  const sent = raw.authorId === id
+  const refined: MessageData = {
+    id: raw.id,
+    createdAt: raw.createdAt,
+    content: raw.content,
+    sent: sent === bool
+  }
+
+  return refined
+}
+
+function refineChat(raw: RawChat) {
+  const user = raw.users[0] as User
+  const refined: ChatData = {
+    id: raw.id,
+    messageCount: raw._count.messages,
+    messages: raw.messages.map(m => refineMessage(m, user.id)),
+    user
+  }
+
+  return refined
+}
+
+function refineChatMinimal(raw: RawChat) {
+  const user = raw.users[0] as User
+  const message = raw.messages[0] as Message
+  const refined: ChatDataMinimal = {
+    id: raw.id,
+    message: refineMessage(message, user.id),
+    messageCount: raw._count.messages,
+    user
+  }
+
+  return refined
+}
+
+export {
+  refineChat,
+  refineChatMinimal,
+  refineComment,
+  refineMessage,
+  refinePost,
+  refineReply,
+  refineSelf,
+  refineUser
+}

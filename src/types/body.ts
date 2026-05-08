@@ -30,7 +30,7 @@ interface PostData {
   title: string
 }
 
-interface CommentData {
+interface ContentData {
   content: string
 }
 
@@ -40,7 +40,7 @@ interface EmailData {
 }
 
 export type {
-  CommentData,
+  ContentData,
   EmailData,
   LogInData,
   OauthData,

@@ -6,7 +6,7 @@ import {
   validateFinal,
   validateImages
 } from '../controllers/validate'
-import { content, title } from '../lib/validator'
+import { post, title } from '../lib/validator'
 import { jwt, jwtOptional } from '../passport/passport'
 
 const router = Router()
@@ -17,7 +17,7 @@ router.post(
   jwt,
   validateImages,
   title,
-  content,
+  post,
   validateBody,
   validateFinal,
   createPost,

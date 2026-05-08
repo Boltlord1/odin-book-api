@@ -15,7 +15,7 @@ const signIn: RequestHandler = (req: UserIdRequest, res) => {
 
   const token = issueJwt(id)
   res.cookie('access_token', token, longOptions)
-  res.send(200).send('Authorized')
+  res.status(200).send('Authorized')
 }
 
 const logIn: RequestHandler = async (req, res) => {

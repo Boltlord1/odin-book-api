@@ -21,20 +21,9 @@ type RawPost = Prisma.PostGetPayload<{
   }
 }>
 
-type RawComment = Prisma.CommentGetPayload<{
+type RawCommentWithoutReplies = Prisma.CommentGetPayload<{
   include: {
     author: true
-    replies: {
-      include: {
-        author: true
-        likedBy: true
-        _count: {
-          select: {
-            likedBy: true
-          }
-        }
-      }
-    }
     likedBy: true
     _count: {
       select: {
@@ -43,6 +32,10 @@ type RawComment = Prisma.CommentGetPayload<{
     }
   }
 }>
+
+interface RawComment extends RawCommentWithoutReplies {
+  replies: RawReply[]
+}
 
 type RawReply = Prisma.ReplyGetPayload<{
   include: {
@@ -86,6 +79,18 @@ type RawProfile = Prisma.UserGetPayload<{
   }
 }>
 
+type RawChat = Prisma.ChatGetPayload<{
+  include: {
+    users: true
+    messages: true
+    _count: {
+      select: {
+        messages: true
+      }
+    }
+  }
+}>
+
 interface EmailIdentity {
   hash: string
   verified: boolean
@@ -108,6 +113,7 @@ export type {
   GoogleIdentity,
   OauthIdentity,
   PossibleUser,
+  RawChat,
   RawComment,
   RawPost,
   RawProfile,

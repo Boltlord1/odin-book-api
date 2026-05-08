@@ -85,14 +85,14 @@ const title = body('title')
   })
   .withMessage('Title must be less than 256 characters.')
 
-const content = body('content')
+const post = body('content')
   .trim()
   .isLength({
     max: 2000
   })
   .withMessage('Post content must be less than 2000 characters.')
 
-const comment = body('content')
+const content = body('content')
   .trim()
   .notEmpty()
   .withMessage('Comment is requied.')
@@ -102,12 +102,12 @@ const comment = body('content')
   .withMessage('Comment must be less than 500 characters.')
 
 export {
-  comment,
   content,
   display,
   email,
   optional,
   password,
+  post,
   required,
   title,
   username

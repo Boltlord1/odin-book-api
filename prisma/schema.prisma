@@ -21,10 +21,12 @@ model User {
   name          String     @unique
   display       String
   avatar        String     @default("odin-book/avatar/default")
+  identities    Identity[]
   posts         Post[]     @relation("author")
   comments      Comment[]
   replies       Reply[]
-  identities    Identity[]
+  messages      Message[]
+  chats         Chat[]
   likedPosts    Post[]     @relation("liked_posts")
   likedComments Comment[]  @relation("liked_comments")
   likedReplies  Reply[]    @relation("liked_replies")
@@ -92,4 +94,21 @@ model Reply {
   comment   Comment  @relation(fields: [commentId], references: [id])
   commentId String
   likedBy   User[]   @relation("liked_replies")
+}
+
+model Message {
+  id        String   @id
+  content   String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  chatId    String
+}
+
+model Chat {
+  id       String    @id
+  users    User[]
+  messages Message[]
+  hash     String    @unique
 }

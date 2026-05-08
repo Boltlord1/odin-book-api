@@ -46,4 +46,34 @@ interface CommentData extends ReplyData {
   replies: ReplyData[]
 }
 
-export type { CommentData, PostData, ProfileData, ReplyData, SelfData }
+interface MessageData {
+  content: string
+  createdAt: Date
+  id: string
+  sent: boolean
+}
+
+interface ChatData {
+  id: string
+  messageCount: number
+  messages: MessageData[]
+  user: User
+}
+
+interface ChatDataMinimal {
+  id: string
+  message: MessageData
+  messageCount: number
+  user: User
+}
+
+export type {
+  ChatData,
+  ChatDataMinimal,
+  CommentData,
+  MessageData,
+  PostData,
+  ProfileData,
+  ReplyData,
+  SelfData
+}

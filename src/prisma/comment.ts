@@ -13,7 +13,10 @@ const CommentGetter = () => {
       const include: CommentInclude = {
         author: true,
         replies: {
-          include: getReplyInclude(user)
+          include: getReplyInclude(user),
+          orderBy: {
+            createdAt: 'asc'
+          }
         },
         _count: {
           select: {
@@ -39,7 +42,10 @@ const CommentGetter = () => {
     const include: CommentInclude = {
       author: true,
       replies: {
-        include: getReplyInclude()
+        include: getReplyInclude(),
+        orderBy: {
+          createdAt: 'asc'
+        }
       },
       _count: {
         select: {
