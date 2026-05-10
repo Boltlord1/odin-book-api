@@ -3,7 +3,7 @@ import { matchedData } from 'express-validator'
 import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 import { refinePost } from '../lib/refine'
-import { frontendUrl } from '../lib/variables'
+import { frontendUrl, whitespace } from '../lib/variables'
 import postGetter from '../prisma/post'
 import type { PostData } from '../types/body'
 import type { PossibleUser, UserWithIdentities } from '../types/prisma'
@@ -30,7 +30,6 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
 }
 
 const getPosts: RequestHandler = async (req, res) => {
-  const user = req.user as PossibleUser
   const sort = req.query.sort || 'recent'
 
   if (typeof sort !== 'string') {
@@ -38,6 +37,7 @@ const getPosts: RequestHandler = async (req, res) => {
     return
   }
 
+  const user = req.user as PossibleUser
   const posts = await postGetter.many(sort, user?.id)
   const refined = posts.map(refinePost)
   res.json(refined)
@@ -57,4 +57,20 @@ const getPost: RequestHandler = async (req, res) => {
   res.json(refined)
 }
 
-export { createPost, getPost, getPosts }
+const searchPosts: RequestHandler = async (req, res, next) => {
+  const search = req.query.search
+
+  if (typeof search !== 'string' || search === '') {
+    next()
+    return
+  }
+
+  const user = req.user as PossibleUser
+  const formatted = search.trim().split(whitespace).join(' & ')
+  const posts = await postGetter.search(formatted, user?.id)
+
+  const refined = posts.map(refinePost)
+  res.json(refined)
+}
+
+export { createPost, getPost, getPosts, searchPosts }

@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { uploadImages } from '../controllers/cloudinary'
-import { createPost, getPost, getPosts } from '../controllers/post'
+import { createPost, getPost, getPosts, searchPosts } from '../controllers/post'
 import {
   validateBody,
   validateFinal,
@@ -11,7 +11,7 @@ import { jwt, jwtOptional } from '../passport/passport'
 
 const router = Router()
 
-router.get('/', jwtOptional, getPosts)
+router.get('/', jwtOptional, searchPosts, getPosts)
 router.post(
   '/',
   jwt,

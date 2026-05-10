@@ -39,11 +39,12 @@ const PostGetter = () => {
     return where
   }
 
-  const getOrderBy = (sort: string) => {
+  const getOrderBy = (sort?: string) => {
     if (sort === 'top') {
-      const orderBy: PostOrderByWithRelationInput = {
-        likedBy: { _count: 'desc' }
-      }
+      const orderBy: PostOrderByWithRelationInput[] = [
+        { likedBy: { _count: 'desc' } },
+        { createdAt: 'desc' }
+      ]
 
       return orderBy
     }
@@ -69,7 +70,27 @@ const PostGetter = () => {
     return post
   }
 
-  return { many, unique }
+  const search = async (search: string, user?: string) => {
+    const include = getInclude(user)
+    const posts = await prisma.post.findMany({
+      include,
+      where: {
+        OR: [
+          { title: { search } },
+          { content: { search } },
+          { comments: { some: { content: { search } } } }
+        ]
+      },
+      orderBy: [
+        { _relevance: { fields: 'title', search, sort: 'desc' } },
+        { _relevance: { fields: 'content', search, sort: 'desc' } }
+      ]
+    })
+
+    return posts
+  }
+
+  return { many, unique, search }
 }
 
 const postGetter = PostGetter()

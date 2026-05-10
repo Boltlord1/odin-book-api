@@ -53,11 +53,12 @@ const CommentGetter = () => {
     return include
   }
 
-  const getOrderBy = (sort: string) => {
+  const getOrderBy = (sort?: string) => {
     if (sort === 'top') {
-      const orderBy: CommentOrderByWithRelationInput = {
-        likedBy: { _count: 'desc' }
-      }
+      const orderBy: CommentOrderByWithRelationInput[] = [
+        { likedBy: { _count: 'desc' } },
+        { createdAt: 'desc' }
+      ]
 
       return orderBy
     }
@@ -67,7 +68,7 @@ const CommentGetter = () => {
     return orderBy
   }
 
-  const many = async (postId: string, sort: string, user?: string) => {
+  const many = async (postId: string, sort?: string, user?: string) => {
     const include = getInclude(user)
     const orderBy = getOrderBy(sort)
     const comments = await prisma.comment.findMany({
