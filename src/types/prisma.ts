@@ -34,16 +34,22 @@ type RawReply = Prisma.ReplyGetPayload<{
   }
 }>
 
+type RawUser = Prisma.UserGetPayload<{
+  include: {
+    _count: { select: { posts: true; followers: true; following: true } }
+  }
+}>
+
 type RawSelf = Prisma.UserGetPayload<{
   include: {
     identities: true
-    _count: { select: { posts: true; followers: true; follows: true } }
+    _count: { select: { posts: true; followers: true; following: true } }
   }
 }>
 
 type RawProfile = Prisma.UserGetPayload<{
   include: {
-    _count: { select: { posts: true; followers: true; follows: true } }
+    _count: { select: { posts: true; followers: true; following: true } }
     followers: { where: { id: string } }
   }
 }>
@@ -84,5 +90,6 @@ export type {
   RawProfile,
   RawReply,
   RawSelf,
+  RawUser,
   UserWithIdentities
 }

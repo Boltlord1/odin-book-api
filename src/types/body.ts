@@ -16,8 +16,8 @@ interface OauthData {
 }
 
 interface UpdateBody {
-  display: string
-  username: string
+  display: string | undefined
+  username: string | undefined
 }
 
 interface UpdateData {

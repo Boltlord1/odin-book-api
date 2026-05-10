@@ -7,18 +7,18 @@ interface UserData {
   name: string
 }
 
-interface ProfileData extends UserData {
-  followed: boolean
+interface UserExtraData extends UserData {
   followers: number
-  follows: number
+  following: number
   posts: number
 }
 
-interface SelfData extends UserData {
-  followers: number
-  follows: number
+interface ProfileData extends UserExtraData {
+  followed: boolean
+}
+
+interface SelfData extends UserExtraData {
   identities: Identity[]
-  posts: number
 }
 
 interface PostData {
@@ -75,5 +75,7 @@ export type {
   PostData,
   ProfileData,
   ReplyData,
-  SelfData
+  SelfData,
+  UserData,
+  UserExtraData
 }

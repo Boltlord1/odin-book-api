@@ -16,6 +16,7 @@ function optional(name: string, msg: string, min = 2) {
     .optional({ values: 'falsy' })
     .isLength({ min, max: 32 })
     .withMessage(`${msg} must be between ${min} and 32 characters.`)
+    .customSanitizer((value) => (value === '' ? undefined : value))
 }
 
 const username = required('username', 'Username')

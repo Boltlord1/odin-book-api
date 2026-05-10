@@ -1,16 +1,21 @@
 import { hash } from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
+import type {
+  IdentityCreateInput,
+  UserUpdateInput
+} from '../../generated/prisma/models'
 import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
-import { refinePost, refineSelf, refineUser } from '../lib/refine'
+import {
+  refinePost,
+  refineProfile,
+  refineSelf,
+  refineUser
+} from '../lib/refine'
 import postGetter from '../prisma/post'
-import type {
-  EmailData,
-  RegisterData,
-  UpdateBody,
-  UpdateData
-} from '../types/body'
+import userGetter from '../prisma/user'
+import type { EmailData, RegisterData, UpdateBody } from '../types/body'
 import type {
   EmailIdentity,
   PossibleUser,
@@ -22,16 +27,17 @@ const createUser: RequestHandler = async (req: UserIdRequest, _res, next) => {
   const { username, display, email, password } = matchedData<RegisterData>(req)
   const hashed = await hash(password, 10)
   const data: EmailIdentity = { hash: hashed, verified: false }
-  const user = await prisma.identity.create({
-    data: {
-      provider: 'Email',
-      id: email,
-      data,
-      user: {
-        create: { id: shortId(), name: username, display: display || username }
-      }
+
+  const input: IdentityCreateInput = {
+    provider: 'Email',
+    id: email,
+    data,
+    user: {
+      create: { id: shortId(), name: username, display: display || username }
     }
-  })
+  }
+
+  const user = await userGetter.create(input)
   req.userId = user.userId
 
   next()
@@ -39,60 +45,17 @@ const createUser: RequestHandler = async (req: UserIdRequest, _res, next) => {
 
 const updateUser: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
-  const { username, display } = matchedData<UpdateBody>(req)
+  const data = matchedData<UpdateBody>(req) as UserUpdateInput
 
-  const data: UpdateData = {}
-
-  if (username && username !== user.name) {
-    data.name = username
-  }
-  if (display) {
-    data.display = display
-  }
-
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data,
-    include: {
-      identities: true,
-      _count: { select: { posts: true, follows: true, followers: true } }
-    }
-  })
+  const updated = await userGetter.update(user.id, data)
 
   const refined = refineSelf(updated)
   res.json(refined)
 }
 
-const connectEmail: RequestHandler = async (req, res) => {
-  const user = req.user as UserWithIdentities
-  const exists = user.identities.find((i) => i.provider === 'Email')
-  if (exists) {
-    res.send('Account already has an email.')
-    return
-  }
-
-  const { email, password } = matchedData<EmailData>(req)
-  const hashed = await hash(password, 10)
-  const data: EmailIdentity = { hash: hashed, verified: false }
-
-  await prisma.identity.create({
-    data: { provider: 'Email', id: email, data, userId: user.id }
-  })
-
-  res.clearCookie('access_token')
-  res.status(200).send('Success')
-}
-
 const getSelf: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
-
-  const self = await prisma.user.findUnique({
-    where: { id: user.id },
-    include: {
-      identities: true,
-      _count: { select: { posts: true, follows: true, followers: true } }
-    }
-  })
+  const self = await userGetter.self(user.id)
 
   if (self === null) {
     res.clearCookie('access_token')
@@ -106,30 +69,22 @@ const getSelf: RequestHandler = async (req, res) => {
 
 const getUser: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
-  const where = user ? { id: user.id } : {}
   const id = req.params.id as string
 
-  const profile = await prisma.user.findUnique({
-    where: { id },
-    include: {
-      _count: {
-        select: {
-          posts: true,
-          follows: true,
-          followers: { where: { NOT: where } }
-        }
-      },
-      followers: { where }
-    }
-  })
+  const profile = await userGetter.profile(id, user?.id)
 
   if (profile === null) {
     res.status(404).send('Not found')
     return
   }
 
-  const refined = refineUser(profile)
+  const refined = refineProfile(profile)
   res.json(refined)
+}
+
+const getUsers: RequestHandler = async (_req, res) => {
+  const users = await userGetter.many()
+  res.json(users.map(refineUser))
 }
 
 const getPosts: RequestHandler = async (req, res) => {
@@ -148,4 +103,32 @@ const getPosts: RequestHandler = async (req, res) => {
   res.json(refined)
 }
 
-export { connectEmail, createUser, getPosts, getSelf, getUser, updateUser }
+const connectEmail: RequestHandler = async (req, res) => {
+  const user = req.user as UserWithIdentities
+  const exists = user.identities.find((i) => i.provider === 'Email')
+  if (exists) {
+    res.status(409).send('Account already has an email.')
+    return
+  }
+
+  const { email, password } = matchedData<EmailData>(req)
+  const hashed = await hash(password, 10)
+  const data: EmailIdentity = { hash: hashed, verified: false }
+
+  await prisma.identity.create({
+    data: { provider: 'Email', id: email, data, userId: user.id }
+  })
+
+  res.clearCookie('access_token')
+  res.status(200).send('Success')
+}
+
+export {
+  connectEmail,
+  createUser,
+  getPosts,
+  getSelf,
+  getUser,
+  getUsers,
+  updateUser
+}

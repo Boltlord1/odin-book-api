@@ -1,13 +1,20 @@
 import { Router } from 'express'
 import { updateAvatar } from '../controllers/cloudinary'
-import { getPosts, getSelf, getUser, updateUser } from '../controllers/user'
+import {
+  getPosts,
+  getSelf,
+  getUser,
+  getUsers,
+  updateUser
+} from '../controllers/user'
 import { validateAvatar, validateFinal } from '../controllers/validate'
 import { optional } from '../lib/validator'
 import { jwt, jwtOptional } from '../passport/passport'
 
 const router = Router()
 
-router.get('/', jwt, getSelf)
+router.get('/', jwtOptional, getUsers)
+router.get('/self', jwt, getSelf)
 router.put(
   '/',
   jwt,

@@ -31,8 +31,8 @@ model User {
   likedPosts    Post[]     @relation("liked_posts")
   likedComments Comment[]  @relation("liked_comments")
   likedReplies  Reply[]    @relation("liked_replies")
-  follows       User[]     @relation("follows")
-  followers     User[]     @relation("follows")
+  following     User[]     @relation("follow")
+  followers     User[]     @relation("follow")
 }
 
 model Identity {

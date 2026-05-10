@@ -3,6 +3,7 @@ import { avatar, destroy, images, url } from '../lib/cloudinary'
 import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 import { refineSelf } from '../lib/refine'
+import userGetter from '../prisma/user'
 import type { UserWithIdentities } from '../types/prisma'
 import type {
   AvatarRequest,
@@ -68,14 +69,7 @@ const updateAvatar: RequestHandler = async (req, res) => {
   }
 
   const user = req.user as UserWithIdentities
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: { avatar: result },
-    include: {
-      identities: true,
-      _count: { select: { posts: true, follows: true, followers: true } }
-    }
-  })
+  const updated = await userGetter.avatar(user.id, result)
   await destroy(user.avatar)
 
   const refined = refineSelf(updated)

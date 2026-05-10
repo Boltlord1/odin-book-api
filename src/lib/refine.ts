@@ -1,4 +1,4 @@
-import type { Message, User } from '../../generated/prisma/client'
+import type { Message } from '../../generated/prisma/client'
 import type {
   ChatData,
   ChatDataMinimal,
@@ -7,7 +7,8 @@ import type {
   PostData,
   ProfileData,
   ReplyData,
-  SelfData
+  SelfData,
+  UserExtraData
 } from '../types/data'
 import type {
   RawChat,
@@ -15,47 +16,44 @@ import type {
   RawPost,
   RawProfile,
   RawReply,
-  RawSelf
+  RawSelf,
+  RawUser
 } from '../types/prisma'
 
-function refinePost(raw: RawPost) {
-  const refined: PostData = {
-    ...raw,
-    comments: raw._count.comments,
-    likes: raw._count.likedBy,
-    liked: raw.likedBy.length > 0
+const pick = <T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
+  const result = {} as Pick<T, K>
+  for (const key of keys) {
+    result[key] = obj[key]
   }
-
-  return refined
+  return result
 }
 
-function refineComment(raw: RawComment) {
-  const refined: CommentData = {
-    ...raw,
-    likes: raw._count.likedBy,
-    liked: raw.likedBy.length > 0,
-    replies: raw.replies.map(refineReply)
-  }
+const refinePost = (raw: RawPost): PostData => ({
+  ...pick(raw, ['author', 'content', 'createdAt', 'id', 'images', 'title']),
+  comments: raw._count.comments,
+  liked: raw.likedBy.length > 0,
+  likes: raw._count.likedBy
+})
 
-  return refined
-}
+const refineComment = (raw: RawComment): CommentData => ({
+  ...pick(raw, ['author', 'content', 'createdAt', 'id']),
+  liked: raw.likedBy.length > 0,
+  likes: raw._count.likedBy,
+  replies: raw.replies.map(refineReply)
+})
 
-function refineReply(raw: RawReply) {
-  const refined: ReplyData = {
-    ...raw,
-    likes: raw._count.likedBy,
-    liked: raw.likedBy.length > 0
-  }
+const refineReply = (raw: RawReply): ReplyData => ({
+  ...pick(raw, ['author', 'content', 'createdAt', 'id']),
+  liked: raw.likedBy.length > 0,
+  likes: raw._count.likedBy
+})
 
-  return refined
-}
-
-function refineSelf(raw: RawSelf) {
+const refineSelf = (raw: RawSelf): SelfData => {
   const refined: SelfData = {
-    ...raw,
+    ...pick(raw, ['avatar', 'display', 'id', 'identities', 'name']),
     posts: raw._count.posts,
     followers: raw._count.followers,
-    follows: raw._count.follows
+    following: raw._count.following
   }
 
   for (const identity of refined.identities) {
@@ -68,53 +66,57 @@ function refineSelf(raw: RawSelf) {
   return refined
 }
 
-function refineUser(raw: RawProfile) {
-  const refined: ProfileData = {
-    ...raw,
-    posts: raw._count.posts,
-    followers: raw._count.followers,
-    follows: raw._count.follows,
-    followed: raw.followers.length > 0
+const refineUser = (raw: RawUser): UserExtraData => ({
+  ...pick(raw, ['avatar', 'display', 'id', 'name']),
+  followers: raw._count.followers,
+  following: raw._count.following,
+  posts: raw._count.posts
+})
+
+const refineProfile = (raw: RawProfile): ProfileData => ({
+  ...pick(raw, ['avatar', 'display', 'id', 'name']),
+  posts: raw._count.posts,
+  followers: raw._count.followers,
+  following: raw._count.following,
+  followed: raw.followers.length > 0
+})
+
+const refineMessage = (
+  raw: Message,
+  id: string,
+  bool = false
+): MessageData => ({
+  ...pick(raw, ['content', 'createdAt', 'id']),
+  sent: (raw.authorId === id) === bool
+})
+
+const refineChat = (raw: RawChat): ChatData | null => {
+  const user = raw.users[0]
+  if (!user) {
+    return null
   }
 
-  return refined
-}
-
-function refineMessage(raw: Message, id: string, bool = false) {
-  const sent = raw.authorId === id
-  const refined: MessageData = {
-    id: raw.id,
-    createdAt: raw.createdAt,
-    content: raw.content,
-    sent: sent === bool
-  }
-
-  return refined
-}
-
-function refineChat(raw: RawChat) {
-  const user = raw.users[0] as User
-  const refined: ChatData = {
-    id: raw.id,
+  return {
+    ...pick(raw, ['id']),
     messageCount: raw._count.messages,
     messages: raw.messages.map((m) => refineMessage(m, user.id)),
     user
   }
-
-  return refined
 }
 
-function refineChatMinimal(raw: RawChat) {
-  const user = raw.users[0] as User
-  const message = raw.messages[0] as Message
-  const refined: ChatDataMinimal = {
-    id: raw.id,
-    message: refineMessage(message, user.id),
-    messageCount: raw._count.messages,
-    user
+const refineChatMinimal = (raw: RawChat): ChatDataMinimal | null => {
+  const user = raw.users[0]
+  const message = raw.messages[0]
+  if (!(user && message)) {
+    return null
   }
 
-  return refined
+  return {
+    ...pick(raw, ['id']),
+    messageCount: raw._count.messages,
+    message: refineMessage(message, user.id),
+    user
+  }
 }
 
 export {
@@ -123,6 +125,7 @@ export {
   refineComment,
   refineMessage,
   refinePost,
+  refineProfile,
   refineReply,
   refineSelf,
   refineUser

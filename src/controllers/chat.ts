@@ -18,15 +18,14 @@ const getChats: RequestHandler = async (req, res) => {
     }
   })
 
-  const refined = chats.map(refineChatMinimal)
-  res.json(refined)
+  res.json(chats.map(refineChatMinimal))
 }
 
 const getChat: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const id = req.params.id
 
-  if (typeof id !== 'string') {
+  if (typeof id !== 'string' || user.id === id) {
     res.status(404).send('Invalid parameter')
     return
   }
