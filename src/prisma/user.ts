@@ -1,8 +1,7 @@
 import type {
   IdentityCreateInput,
   UserInclude,
-  UserUpdateInput,
-  UserWhereInput
+  UserUpdateInput
 } from '../../generated/prisma/models'
 import prisma from '../lib/primsa'
 
@@ -21,9 +20,6 @@ const UserGetter = () => {
     _count: { select: { posts: true, following: true, followers: true } }
   })
 
-  const getWhere = (user?: string): UserWhereInput =>
-    user ? { NOT: { id: user } } : {}
-
   const avatar = (id: string, avatar: string) =>
     prisma.user.update({
       where: { id },
@@ -35,26 +31,17 @@ const UserGetter = () => {
 
   const many = () =>
     prisma.user.findMany({
-      orderBy: { followers: { _count: 'desc' } },
-      include: getInclude()
+      include: getInclude(),
+      orderBy: { followers: { _count: 'desc' } }
     })
 
   const profile = (id: string, user?: string) =>
     prisma.user.findUnique({ where: { id }, include: getInclude(user) })
 
-  const search = (search: string, user?: string) =>
+  const search = (contains: string) =>
     prisma.user.findMany({
-      where: {
-        AND: [
-          {
-            OR: [
-              { name: { contains: search } },
-              { display: { contains: search } }
-            ]
-          },
-          getWhere(user)
-        ]
-      },
+      where: { OR: [{ name: { contains } }, { display: { contains } }] },
+      include: getInclude(),
       orderBy: { display: 'asc' }
     })
 

@@ -5,6 +5,7 @@ import {
   getSelf,
   getUser,
   getUsers,
+  searchUsers,
   updateUser
 } from '../controllers/user'
 import { validateAvatar, validateFinal } from '../controllers/validate'
@@ -13,7 +14,7 @@ import { jwt, jwtOptional } from '../passport/passport'
 
 const router = Router()
 
-router.get('/', jwtOptional, getUsers)
+router.get('/', jwtOptional, searchUsers, getUsers)
 router.get('/self', jwt, getSelf)
 router.put(
   '/',

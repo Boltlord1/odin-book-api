@@ -9,7 +9,7 @@ const changeFollow = (action: 'connect' | 'disconnect') => {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { follows: { [action]: { id } } }
+      data: { following: { [action]: { id } } }
     })
 
     res.json(true)
@@ -25,7 +25,7 @@ const getFollowers: RequestHandler = async (req, res) => {
   const id = req.params.id as string
 
   const followers = await prisma.user.findMany({
-    where: { follows: { every: { id } } }
+    where: { following: { every: { id } } }
   })
 
   res.json(followers)
@@ -34,11 +34,11 @@ const getFollowers: RequestHandler = async (req, res) => {
 const getFollowing: RequestHandler = async (req, res) => {
   const id = req.params.id as string
 
-  const follows = await prisma.user.findMany({
+  const following = await prisma.user.findMany({
     where: { followers: { every: { id } } }
   })
 
-  res.json(follows)
+  res.json(following)
 }
 
 export { follow, getFollowers, getFollowing, unfollow }

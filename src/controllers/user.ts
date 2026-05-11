@@ -13,6 +13,7 @@ import {
   refineSelf,
   refineUser
 } from '../lib/refine'
+import { whitespace } from '../lib/variables'
 import postGetter from '../prisma/post'
 import userGetter from '../prisma/user'
 import type { EmailData, RegisterData, UpdateBody } from '../types/body'
@@ -45,9 +46,12 @@ const createUser: RequestHandler = async (req: UserIdRequest, _res, next) => {
 
 const updateUser: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
-  const data = matchedData<UpdateBody>(req) as UserUpdateInput
+  const { username, display } = matchedData<UpdateBody>(req)
 
-  const updated = await userGetter.update(user.id, data)
+  const updated = await userGetter.update(user.id, {
+    name: username,
+    display
+  } as UserUpdateInput)
 
   const refined = refineSelf(updated)
   res.json(refined)
@@ -85,6 +89,21 @@ const getUser: RequestHandler = async (req, res) => {
 const getUsers: RequestHandler = async (_req, res) => {
   const users = await userGetter.many()
   res.json(users.map(refineUser))
+}
+
+const searchUsers: RequestHandler = async (req, res, next) => {
+  const search = req.query.search
+
+  if (typeof search !== 'string' || search === '') {
+    next()
+    return
+  }
+
+  const formatted = search.trim().split(whitespace).join(' & ')
+  const users = await userGetter.search(formatted)
+
+  const refined = users.map(refineUser)
+  res.json(refined)
 }
 
 const getPosts: RequestHandler = async (req, res) => {
@@ -130,5 +149,6 @@ export {
   getSelf,
   getUser,
   getUsers,
+  searchUsers,
   updateUser
 }
