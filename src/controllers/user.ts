@@ -142,7 +142,24 @@ const connectEmail: RequestHandler = async (req, res) => {
   res.status(200).send('Success')
 }
 
+const checkUsername: RequestHandler = async (req, res) => {
+  const name = req.query.name
+  console.log(name)
+  if (typeof name !== 'string') {
+    res.status(400).send('Invalid query')
+    return
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { name },
+    select: { name: true }
+  })
+
+  res.json(user === null)
+}
+
 export {
+  checkUsername,
   connectEmail,
   createUser,
   getPosts,

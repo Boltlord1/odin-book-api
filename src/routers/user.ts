@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { updateAvatar } from '../controllers/cloudinary'
 import {
+  checkUsername,
   getPosts,
   getSelf,
   getUser,
@@ -16,6 +17,7 @@ const router = Router()
 
 router.get('/', jwtOptional, searchUsers, getUsers)
 router.get('/self', jwt, getSelf)
+router.get('/name', checkUsername)
 router.put(
   '/',
   jwt,
