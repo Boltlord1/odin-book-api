@@ -1,4 +1,9 @@
-import type { Identity, Image, User } from '../../generated/prisma/client'
+import type {
+  Identity,
+  Image,
+  Message,
+  User
+} from '../../generated/prisma/client'
 
 interface UserData {
   avatar: string
@@ -62,7 +67,7 @@ interface ChatData {
 
 interface ChatDataMinimal {
   id: string
-  message: MessageData
+  message: Message | { content: string }
   messageCount: number
   user: User
 }

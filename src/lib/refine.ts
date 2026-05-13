@@ -106,15 +106,15 @@ const refineChat = (raw: RawChat): ChatData | null => {
 
 const refineChatMinimal = (raw: RawChat): ChatDataMinimal | null => {
   const user = raw.users[0]
-  const message = raw.messages[0]
-  if (!(user && message)) {
+  const message = raw.messages[0] || { content: 'No messages' }
+  if (!user) {
     return null
   }
 
   return {
     ...pick(raw, ['id']),
     messageCount: raw._count.messages,
-    message: refineMessage(message, user.id),
+    message,
     user
   }
 }
