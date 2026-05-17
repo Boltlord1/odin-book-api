@@ -3,7 +3,7 @@ import { matchedData } from 'express-validator'
 import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 import { refinePost } from '../lib/refine'
-import { frontendUrl, whitespace } from '../lib/variables'
+import { whitespace } from '../lib/variables'
 import postGetter from '../prisma/post'
 import type { PostData } from '../types/body'
 import type { PossibleUser, UserWithIdentities } from '../types/prisma'
@@ -21,7 +21,7 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
   const postId = post.id
   const files = req.files
   if (!(req.files && Array.isArray(files))) {
-    res.redirect(`${frontendUrl}/app/post/${postId}`)
+    res.status(201).json(postId)
     return
   }
 

@@ -9,7 +9,11 @@ import {
   searchUsers,
   updateUser
 } from '../controllers/user'
-import { validateAvatar, validateFinal } from '../controllers/validate'
+import {
+  validateAvatar,
+  validateFinal,
+  validateForm
+} from '../controllers/validate'
 import { optional } from '../lib/validator'
 import { jwt, jwtOptional } from '../passport/passport'
 
@@ -21,6 +25,7 @@ router.get('/name', checkUsername)
 router.put(
   '/',
   jwt,
+  validateForm,
   optional('username', 'Username'),
   optional('display', 'Display name'),
   updateUser

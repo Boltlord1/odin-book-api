@@ -47,6 +47,8 @@ const createUser: RequestHandler = async (req: UserIdRequest, _res, next) => {
 const updateUser: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const { username, display } = matchedData<UpdateBody>(req)
+  console.log(username)
+  console.log(display)
 
   const updated = await userGetter.update(user.id, {
     name: username,

@@ -30,15 +30,16 @@ const logIn: RequestHandler = async (req, res) => {
     include: { identities: { where: { provider: 'Email' } } }
   })
 
+  const errorMsg = 'Invalid username or password.'
   if (user === null || !user.identities[0]) {
-    const error = serverError('Invalid username or password.')
+    const error = serverError(errorMsg)
     return res.status(401).json(error)
   }
 
   const data = user.identities[0].data as EmailIdentity
   const match = await compare(password, data.hash)
   if (!match) {
-    const error = serverError('Invalid username or password.')
+    const error = serverError(errorMsg)
     return res.status(401).json(error)
   }
 

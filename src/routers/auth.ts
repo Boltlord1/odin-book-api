@@ -11,13 +11,27 @@ import { connectEmail, createUser } from '../controllers/user'
 import {
   validateAvatar,
   validateBody,
-  validateFinal
+  validateFinal,
+  validateForm
 } from '../controllers/validate'
 import { display, email, password, required, username } from '../lib/validator'
 import { github, google, jwt, jwtOptional, jwtTemp } from '../passport/passport'
 
-const getVerify = [jwt, verify]
-const postSignUp = [
+const router = Router()
+
+router.get('/verify', jwt, verify)
+router.get('/logout', logOut)
+router.post(
+  '/login',
+  validateForm,
+  required('username', 'Username', 1),
+  required('password', 'Password', 1),
+  validateBody,
+  validateFinal,
+  logIn
+)
+router.post(
+  '/signup',
   validateAvatar,
   username,
   display,
@@ -28,64 +42,44 @@ const postSignUp = [
   createUser,
   uploadAvatar,
   signIn
-]
-
-const postLogIn = [
-  username,
-  required('password', 'Password', 1),
+)
+router.post(
+  '/email',
+  jwt,
+  validateForm,
+  email,
+  ...password,
   validateBody,
   validateFinal,
-  logIn
-]
+  connectEmail
+)
 
-const getLogOut = [logOut]
-const getGoogle = [google]
-const getGoogleCallback = [jwtOptional, google, googleCallback]
-const postGoogleSignUp = [
+router.get('/github', github)
+router.get('/github/callback', jwtOptional, github, githubCallback)
+router.post(
+  '/github/signup',
   jwtTemp,
-  username,
-  display,
-  validateBody,
-  validateFinal,
-  uploadAuto,
-  googleSignUp
-]
-
-const getGithub = [github]
-const getGithubCallback = [jwtOptional, github, githubCallback]
-const postGithubSignUp = [
-  jwtTemp,
+  validateForm,
   username,
   display,
   validateBody,
   validateFinal,
   uploadAuto,
   githubSignUp
-]
+)
 
-const postEmail = [
-  jwt,
-  email,
-  ...password,
+router.get('/google', google)
+router.get('/google/callback', jwtOptional, google, googleCallback)
+router.post(
+  '/google/signup',
+  jwtTemp,
+  validateForm,
+  username,
+  display,
   validateBody,
   validateFinal,
-  connectEmail
-]
-
-const router = Router()
-
-router.get('/verify', getVerify)
-router.post('/login', postLogIn)
-router.get('/logout', getLogOut)
-router.post('/signup', postSignUp)
-router.post('/email', postEmail)
-
-router.get('/github', getGithub)
-router.get('/github/callback', getGithubCallback)
-router.post('/github/signup', postGithubSignUp)
-
-router.get('/google', getGoogle)
-router.get('/google/callback', getGoogleCallback)
-router.post('/google/signup', postGoogleSignUp)
+  uploadAuto,
+  googleSignUp
+)
 
 export default router

@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'express'
 import { avatar, destroy, images, url } from '../lib/cloudinary'
 import shortId from '../lib/cuid2'
+import { clientError } from '../lib/errors'
 import prisma from '../lib/primsa'
 import { refineSelf } from '../lib/refine'
 import userGetter from '../prisma/user'
@@ -56,11 +57,16 @@ const uploadImages: RequestHandler = async (req: PostRequest, res) => {
     data: result.map((r) => ({ ...r, postId, id: shortId() }))
   })
 
-  res.json(postId)
+  res.status(201).json(postId)
 }
 
 const updateAvatar: RequestHandler = async (req, res) => {
   const file = req.file as Express.Multer.File
+  if (!file) {
+    const error = clientError('avatar', 'Avatar is required')
+    res.status(400).json([error])
+    return
+  }
 
   const result = await avatar(file)
   if (typeof result !== 'string') {
@@ -70,7 +76,9 @@ const updateAvatar: RequestHandler = async (req, res) => {
 
   const user = req.user as UserWithIdentities
   const updated = await userGetter.avatar(user.id, result)
-  await destroy(user.avatar)
+  if (!user.avatar.includes('default')) {
+    await destroy(user.avatar)
+  }
 
   const refined = refineSelf(updated)
   res.json(refined)

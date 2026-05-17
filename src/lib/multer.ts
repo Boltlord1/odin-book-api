@@ -3,6 +3,8 @@ import multer from 'multer'
 const avatarTypes = ['image/jpeg', 'image/png']
 const imagesTypes = [...avatarTypes, 'image/gif']
 
+const form = multer()
+
 const avatar = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -27,4 +29,4 @@ const images = multer({
   }
 }).array('images', 5)
 
-export { avatar, images }
+export { avatar, form, images }

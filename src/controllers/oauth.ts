@@ -47,7 +47,7 @@ const oauthSignUp = (provider: Provider) => {
           create: {
             id: shortId(),
             name: username,
-            display,
+            display: display || username,
             ...(avatar ? { avatar } : {})
           }
         }

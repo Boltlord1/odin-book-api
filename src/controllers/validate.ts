@@ -2,12 +2,14 @@ import type { RequestHandler } from 'express'
 import { validationResult } from 'express-validator'
 import { MulterError } from 'multer'
 import { clientError } from '../lib/errors'
-import { avatar, images } from '../lib/multer'
+import { avatar, form, images } from '../lib/multer'
 
 const validateInitial: RequestHandler = (req, _res, next) => {
   req.errors = []
   next()
 }
+
+const validateForm = form.none()
 
 const validateBody: RequestHandler = (req, _res, next) => {
   const errors = req.errors
@@ -33,7 +35,7 @@ const validateAvatar: RequestHandler = (req, res, next) => {
   avatar(req, res, (err) => {
     if (err instanceof MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        const error = clientError('avatar', 'File size must be less than 5mb.')
+        const error = clientError('avatar', 'File size must be less than 5mb')
         errors.push(error)
       } else {
         const error = clientError(
@@ -45,7 +47,7 @@ const validateAvatar: RequestHandler = (req, res, next) => {
     }
 
     if (err && err.message === 'INVALID_FILE_TYPE') {
-      const error = clientError('avatar', 'Avatar must be a png or jpeg.')
+      const error = clientError('avatar', 'Avatar must be a png or jpeg')
       errors.push(error)
     }
 
@@ -61,13 +63,13 @@ const validateImages: RequestHandler = (req, res, next) => {
       if (err.code === 'LIMIT_FILE_SIZE') {
         const error = clientError(
           'images',
-          'File size for each image must be less than 5mb.'
+          'File size for each image must be less than 5mb'
         )
         errors.push(error)
       } else if (err.code === 'LIMIT_FILE_COUNT') {
         const error = clientError(
           'images',
-          'Each post can only have up to 5 images.'
+          'Each post can only have up to 5 images'
         )
         errors.push(error)
       } else {
@@ -80,7 +82,7 @@ const validateImages: RequestHandler = (req, res, next) => {
     }
 
     if (err && err.message === 'INVALID_FILE_TYPE') {
-      const error = clientError('images', 'Image must be a png, jpeg or gif.')
+      const error = clientError('images', 'Image must be a png, jpeg or gif')
       errors.push(error)
     }
 
@@ -102,6 +104,7 @@ export {
   validateAvatar,
   validateBody,
   validateFinal,
+  validateForm,
   validateImages,
   validateInitial
 }
