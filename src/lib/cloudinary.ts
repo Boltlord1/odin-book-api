@@ -22,10 +22,7 @@ const avatar = async (file: Express.Multer.File) => {
     return response.public_id
   } catch (err) {
     console.log(err)
-    const error: ServerError = {
-      type: 'server',
-      msg: 'Error uploading avatar.'
-    }
+    const error: ServerError = { type: 'server', msg: 'Error uploading avatar' }
     return error
   }
 }
@@ -54,10 +51,7 @@ const images = async (files: Express.Multer.File[]) => {
     )
     await Promise.all(destroy)
 
-    const error: ServerError = {
-      type: 'server',
-      msg: 'Error uploading images.'
-    }
+    const error: ServerError = { type: 'server', msg: 'Error uploading images' }
     return error
   }
 
@@ -77,10 +71,7 @@ const url = async (url: string) => {
     return response.public_id
   } catch (err) {
     console.log(err)
-    const error: ServerError = {
-      type: 'server',
-      msg: 'Error uploading avatar.'
-    }
+    const error: ServerError = { type: 'server', msg: 'Error uploading avatar' }
     return error
   }
 }

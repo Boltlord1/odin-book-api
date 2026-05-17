@@ -21,7 +21,7 @@ model User {
   id            String     @id
   name          String     @unique
   display       String
-  avatar        String     @default("odin-book/avatar/default")
+  avatar        String?
   identities    Identity[]
   posts         Post[]     @relation("author")
   comments      Comment[]

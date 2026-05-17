@@ -1,7 +1,9 @@
 import type { RequestHandler } from 'express'
 import { avatar, destroy, images, url } from '../lib/cloudinary'
+import { longOptions } from '../lib/cookie'
 import shortId from '../lib/cuid2'
 import { clientError } from '../lib/errors'
+import { issueJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
 import { refineSelf } from '../lib/refine'
 import userGetter from '../prisma/user'
@@ -20,13 +22,16 @@ const uploadAvatar: RequestHandler = async (req: UserIdRequest, res, next) => {
     return
   }
 
+  const id = req.userId as string
   const result = await avatar(file)
   if (typeof result !== 'string') {
+    const token = issueJwt(id)
+    res.cookie('access_token', token, longOptions)
+    result.msg += '. Accounted created without avatar. Redirecting...'
     res.status(502).json(result)
     return
   }
 
-  const id = req.userId as string
   await prisma.user.update({ where: { id }, data: { avatar: result } })
   next()
 }
@@ -76,7 +81,7 @@ const updateAvatar: RequestHandler = async (req, res) => {
 
   const user = req.user as UserWithIdentities
   const updated = await userGetter.avatar(user.id, result)
-  if (!user.avatar.includes('default')) {
+  if (user.avatar) {
     await destroy(user.avatar)
   }
 

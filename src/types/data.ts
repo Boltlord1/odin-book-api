@@ -6,7 +6,7 @@ import type {
 } from '../../generated/prisma/client'
 
 interface UserData {
-  avatar: string
+  avatar: string | null
   display: string
   id: string
   name: string
