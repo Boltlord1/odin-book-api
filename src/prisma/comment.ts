@@ -56,14 +56,14 @@ const CommentGetter = () => {
   const getOrderBy = (sort?: string) => {
     if (sort === 'top') {
       const orderBy: CommentOrderByWithRelationInput[] = [
-        { likedBy: { _count: 'desc' } },
-        { createdAt: 'desc' }
+        { likedBy: { _count: 'asc' } },
+        { createdAt: 'asc' }
       ]
 
       return orderBy
     }
 
-    const orderBy: CommentOrderByWithRelationInput = { createdAt: 'desc' }
+    const orderBy: CommentOrderByWithRelationInput = { createdAt: 'asc' }
 
     return orderBy
   }

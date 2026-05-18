@@ -73,12 +73,14 @@ const post = body('content')
   .isLength({ max: 2000 })
   .withMessage('Post content must be less than 2000 characters')
 
-const content = body('content')
-  .trim()
-  .notEmpty()
-  .withMessage('Comment is requied.')
-  .isLength({ max: 512 })
-  .withMessage('Comment must be less than 500 characters')
+function content(label: string) {
+  return body('content')
+    .trim()
+    .notEmpty()
+    .withMessage(`${label} is requied`)
+    .isLength({ max: 500 })
+    .withMessage(`${label} must be less than 500 characters`)
+}
 
 export {
   content,
