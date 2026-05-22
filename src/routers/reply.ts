@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createReply } from '../controllers/reply'
+import { createReply, deleteReply } from '../controllers/reply'
 import {
   validateBody,
   validateFinal,
@@ -10,6 +10,7 @@ import { jwt } from '../passport/passport'
 
 const router = Router()
 
+router.delete('/:id', jwt, deleteReply)
 router.post(
   '/:id',
   jwt,

@@ -1,5 +1,9 @@
 import { Router } from 'express'
-import { createComment, getComments } from '../controllers/comment'
+import {
+  createComment,
+  deleteComment,
+  getComments
+} from '../controllers/comment'
 import {
   validateBody,
   validateFinal,
@@ -11,6 +15,7 @@ import { jwt, jwtOptional } from '../passport/passport'
 const router = Router()
 
 router.get('/:id', jwtOptional, getComments)
+router.delete('/:id', jwt, deleteComment)
 router.post(
   '/:id',
   jwt,

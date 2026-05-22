@@ -94,7 +94,16 @@ const CommentGetter = () => {
     return reply
   }
 
-  return { create, many, reply }
+  const deleted = async (id: string, authorId: string) => {
+    const { count } = await prisma.comment.updateMany({
+      where: { id, authorId },
+      data: { authorId: null, content: 'Deleted comment.' }
+    })
+
+    return count === 0
+  }
+
+  return { create, many, reply, delete: deleted }
 }
 
 const commentGetter = CommentGetter()

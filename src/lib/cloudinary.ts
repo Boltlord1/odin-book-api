@@ -76,8 +76,13 @@ const url = async (url: string) => {
   }
 }
 
-const destroy = async (id: string) => {
-  await cloudinary.uploader.destroy(id)
+const destroy = async (id: string | string[]) => {
+  if (typeof id === 'string') {
+    await cloudinary.uploader.destroy(id)
+    return
+  }
+
+  await Promise.all(id.map((id) => cloudinary.uploader.destroy(id)))
 }
 
 export { avatar, destroy, images, url }

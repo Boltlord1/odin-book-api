@@ -2,6 +2,7 @@ import type {
   PostInclude,
   PostOrderByWithRelationInput
 } from '../../generated/prisma/models'
+import { destroy } from '../lib/cloudinary'
 import prisma from '../lib/primsa'
 
 const PostGetter = () => {
@@ -31,7 +32,7 @@ const PostGetter = () => {
 
   const getWhere = (authorId?: string) => {
     if (!authorId) {
-      return {}
+      return { NOT: { authorId: null } }
     }
 
     const where = { authorId }
@@ -75,10 +76,28 @@ const PostGetter = () => {
     const posts = await prisma.post.findMany({
       include,
       where: {
-        OR: [
-          { title: { search } },
-          { content: { search } },
-          { comments: { some: { content: { search } } } }
+        AND: [
+          {
+            OR: [
+              { title: { search } },
+              { content: { search } },
+              {
+                AND: [
+                  {
+                    comments: {
+                      some: {
+                        AND: [
+                          { content: { search } },
+                          { NOT: { authorId: null } }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          { NOT: { authorId: null } }
         ]
       },
       orderBy: [
@@ -90,7 +109,38 @@ const PostGetter = () => {
     return posts
   }
 
-  return { many, unique, search }
+  const deleted = async (id: string, authorId: string) => {
+    const transaction = await prisma.$transaction(async (tx) => {
+      const post = await tx.post.findFirst({
+        where: { id, authorId },
+        select: { images: true }
+      })
+
+      if (!post) {
+        return null
+      }
+
+      await tx.post.update({
+        where: { id },
+        data: {
+          authorId: null,
+          title: 'Deleted post',
+          content: null,
+          images: { deleteMany: {} }
+        }
+      })
+
+      return post.images
+    })
+
+    if (Array.isArray(transaction)) {
+      destroy(transaction.map((i) => i.publicId))
+    }
+
+    return !transaction
+  }
+
+  return { many, unique, search, delete: deleted }
 }
 
 const postGetter = PostGetter()

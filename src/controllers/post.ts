@@ -73,4 +73,18 @@ const searchPosts: RequestHandler = async (req, res, next) => {
   res.json(refined)
 }
 
-export { createPost, getPost, getPosts, searchPosts }
+const deletePost: RequestHandler = async (req, res) => {
+  const user = req.user as UserWithIdentities
+  const id = req.params.id as string
+
+  const bool = await postGetter.delete(id, user.id)
+
+  if (bool) {
+    res.status(404).end()
+    return
+  }
+
+  res.status(200).end()
+}
+
+export { createPost, deletePost, getPost, getPosts, searchPosts }

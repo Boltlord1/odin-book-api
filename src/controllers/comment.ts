@@ -39,4 +39,18 @@ const getComments: RequestHandler = async (req, res) => {
   res.json(refined)
 }
 
-export { createComment, getComments }
+const deleteComment: RequestHandler = async (req, res) => {
+  const user = req.user as UserWithIdentities
+  const id = req.params.id as string
+
+  const bool = await commentGetter.delete(id, user.id)
+
+  if (bool) {
+    res.status(403).end()
+    return
+  }
+
+  res.status(200).end()
+}
+
+export { createComment, deleteComment, getComments }

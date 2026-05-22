@@ -1,6 +1,12 @@
 import { Router } from 'express'
 import { uploadImages } from '../controllers/cloudinary'
-import { createPost, getPost, getPosts, searchPosts } from '../controllers/post'
+import {
+  createPost,
+  deletePost,
+  getPost,
+  getPosts,
+  searchPosts
+} from '../controllers/post'
 import {
   validateBody,
   validateFinal,
@@ -25,5 +31,6 @@ router.post(
 )
 
 router.get('/:id', jwtOptional, getPost)
+router.delete('/:id', jwt, deletePost)
 
 export default router

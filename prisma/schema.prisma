@@ -58,8 +58,8 @@ model Post {
   title     String
   content   String?
   createdAt DateTime  @default(now())
-  author    User      @relation("author", fields: [authorId], references: [id])
-  authorId  String
+  author    User?     @relation("author", fields: [authorId], references: [id])
+  authorId  String?
   comments  Comment[]
   likedBy   User[]    @relation("liked_posts")
   images    Image[]
@@ -78,8 +78,8 @@ model Comment {
   id        String   @id
   content   String
   createdAt DateTime @default(now())
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  String?
   post      Post     @relation(fields: [postId], references: [id])
   postId    String
   replies   Reply[]
@@ -90,8 +90,8 @@ model Reply {
   id        String   @id
   content   String
   createdAt DateTime @default(now())
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  String?
   comment   Comment  @relation(fields: [commentId], references: [id])
   commentId String
   likedBy   User[]   @relation("liked_replies")
