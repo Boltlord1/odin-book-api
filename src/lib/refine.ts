@@ -39,6 +39,7 @@ const refineComment = (raw: RawComment): CommentData => ({
   ...pick(raw, ['author', 'content', 'createdAt', 'id']),
   liked: raw.likedBy.length > 0,
   likes: raw._count.likedBy,
+  replyCount: raw._count.replies,
   replies: raw.replies.map(refineReply)
 })
 

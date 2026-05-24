@@ -4,6 +4,7 @@ import type { CommentCreateInput } from '../../generated/prisma/models'
 import shortId from '../lib/cuid2'
 import { refineComment } from '../lib/refine'
 import commentGetter from '../prisma/comment'
+import parseQuery from '../routers/query'
 import type { ContentData } from '../types/body'
 import type { PossibleUser, UserWithIdentities } from '../types/prisma'
 
@@ -27,14 +28,13 @@ const createComment: RequestHandler = async (req, res) => {
 const getComments: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
   const postId = req.params.id as string
-  const sort = req.query.sort || 'recent'
 
-  if (typeof sort !== 'string') {
-    res.status(400).send('Invalid query')
-    return
-  }
+  const sort = parseQuery(req.query.sort) || 'recent'
+  const cursor = parseQuery(req.query.cursor)
 
-  const comments = await commentGetter.many(postId, sort, user?.id)
+  const selfId = user?.id
+  const comments = await commentGetter.many(postId, { cursor, selfId, sort })
+
   const refined = comments.map(refineComment)
   res.json(refined)
 }

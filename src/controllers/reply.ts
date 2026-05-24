@@ -5,8 +5,9 @@ import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 import { refineReply } from '../lib/refine'
 import commentGetter from '../prisma/comment'
+import parseQuery from '../routers/query'
 import type { ContentData } from '../types/body'
-import type { UserWithIdentities } from '../types/prisma'
+import type { PossibleUser, UserWithIdentities } from '../types/prisma'
 
 const createReply: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
@@ -25,6 +26,18 @@ const createReply: RequestHandler = async (req, res) => {
   res.status(201).json(refined)
 }
 
+const getReplies: RequestHandler = async (req, res) => {
+  const user = req.user as PossibleUser
+  const commentId = req.params.id as string
+  const cursor = parseQuery(req.query.cursor)
+
+  const selfId = user?.id
+  const replies = await commentGetter.replies(commentId, { cursor, selfId })
+
+  const refined = replies.map(refineReply)
+  res.json(refined)
+}
+
 const deleteReply: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const id = req.params.id as string
@@ -41,4 +54,4 @@ const deleteReply: RequestHandler = async (req, res) => {
   res.status(200).end()
 }
 
-export { createReply, deleteReply }
+export { createReply, deleteReply, getReplies }

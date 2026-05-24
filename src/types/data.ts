@@ -5,14 +5,7 @@ import type {
   User
 } from '../../generated/prisma/client'
 
-interface UserData {
-  avatar: string | null
-  display: string
-  id: string
-  name: string
-}
-
-interface UserExtraData extends UserData {
+interface UserExtraData extends User {
   followers: number
   following: number
   posts: number
@@ -27,7 +20,7 @@ interface SelfData extends UserExtraData {
 }
 
 interface PostData {
-  author: User
+  author: User | null
   comments: number
   content: string | null
   createdAt: Date
@@ -39,7 +32,7 @@ interface PostData {
 }
 
 interface ReplyData {
-  author: User
+  author: User | null
   content: string
   createdAt: Date
   id: string
@@ -49,6 +42,7 @@ interface ReplyData {
 
 interface CommentData extends ReplyData {
   replies: ReplyData[]
+  replyCount: number
 }
 
 interface MessageData {
@@ -81,6 +75,5 @@ export type {
   ProfileData,
   ReplyData,
   SelfData,
-  UserData,
   UserExtraData
 }

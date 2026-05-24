@@ -1,80 +1,88 @@
 import type {
   CommentCreateInput,
+  CommentFindManyArgs,
   CommentInclude,
   CommentOrderByWithRelationInput,
   ReplyCreateInput,
+  ReplyFindManyArgs,
   ReplyInclude
 } from '../../generated/prisma/models'
 import prisma from '../lib/primsa'
 
+interface Params {
+  cursor?: string
+  selfId?: string
+  sort?: string
+}
+
 const CommentGetter = () => {
-  const getInclude = (user?: string) => {
-    if (user) {
-      const include: CommentInclude = {
+  const getInclude = (id?: string): CommentInclude => {
+    if (id) {
+      return {
         author: true,
         replies: {
-          include: getReplyInclude(user),
-          orderBy: { createdAt: 'asc' }
+          include: getReplyInclude(id),
+          orderBy: { createdAt: 'asc' },
+          take: 10
         },
-        _count: { select: { likedBy: { where: { NOT: { id: user } } } } },
-        likedBy: { where: { id: user } }
+        _count: {
+          select: { likedBy: { where: { NOT: { id } } }, replies: true }
+        },
+        likedBy: { where: { id } }
       }
-
-      return include
     }
 
-    const include: CommentInclude = {
+    return {
       author: true,
       replies: { include: getReplyInclude(), orderBy: { createdAt: 'asc' } },
       _count: { select: { likedBy: true } },
       likedBy: { where: { id: '' } }
     }
-
-    return include
   }
 
-  const getReplyInclude = (user?: string) => {
-    if (user) {
-      const include: ReplyInclude = {
+  const getReplyInclude = (id?: string): ReplyInclude => {
+    if (id) {
+      return {
         author: true,
         _count: { select: { likedBy: true } },
-        likedBy: { where: { id: '' } }
+        likedBy: { where: { id } }
       }
-
-      return include
     }
 
-    const include: ReplyInclude = {
+    return {
       author: true,
       _count: { select: { likedBy: true } },
       likedBy: { where: { id: '' } }
     }
-
-    return include
   }
 
-  const getOrderBy = (sort?: string) => {
+  const getOrderBy = (
+    sort?: string
+  ): CommentOrderByWithRelationInput | CommentOrderByWithRelationInput[] => {
     if (sort === 'top') {
-      const orderBy: CommentOrderByWithRelationInput[] = [
-        { likedBy: { _count: 'asc' } },
-        { createdAt: 'asc' }
-      ]
-
-      return orderBy
+      return [{ likedBy: { _count: 'asc' } }, { createdAt: 'asc' }]
     }
 
-    const orderBy: CommentOrderByWithRelationInput = { createdAt: 'asc' }
-
-    return orderBy
+    return { createdAt: 'asc' }
   }
 
-  const many = async (postId: string, sort?: string, user?: string) => {
-    const include = getInclude(user)
+  const getCursor = (id?: string): CommentFindManyArgs | ReplyFindManyArgs => {
+    if (!id) {
+      return {}
+    }
+
+    return { cursor: { id }, skip: 1 }
+  }
+
+  const many = async (postId: string, { cursor, selfId, sort }: Params) => {
+    const include = getInclude(selfId)
     const orderBy = getOrderBy(sort)
     const comments = await prisma.comment.findMany({
       where: { postId },
       include,
-      orderBy
+      orderBy,
+      take: 10,
+      ...(getCursor(cursor) as CommentFindManyArgs)
     })
 
     return comments
@@ -87,6 +95,19 @@ const CommentGetter = () => {
     return comment
   }
 
+  const replies = async (commentId: string, { cursor, selfId }: Params) => {
+    const include = getReplyInclude(selfId)
+    const replies = await prisma.reply.findMany({
+      where: { commentId },
+      include,
+      orderBy: { createdAt: 'asc' },
+      take: 10,
+      ...(getCursor(cursor) as ReplyFindManyArgs)
+    })
+
+    return replies
+  }
+
   const reply = async (data: ReplyCreateInput) => {
     const include = getReplyInclude()
     const reply = await prisma.reply.create({ data, include })
@@ -95,15 +116,30 @@ const CommentGetter = () => {
   }
 
   const deleted = async (id: string, authorId: string) => {
-    const { count } = await prisma.comment.updateMany({
-      where: { id, authorId },
-      data: { authorId: null, content: 'Deleted comment.' }
+    const transaction = await prisma.$transaction(async (tx) => {
+      const comment = await tx.comment.findFirst({
+        where: { id, authorId },
+        select: { id: true, _count: { select: { replies: true } } }
+      })
+
+      if (!comment) {
+        return null
+      }
+
+      if (comment._count.replies) {
+        await prisma.comment.update({
+          where: { id },
+          data: { authorId: null, content: 'Comment was deleted' }
+        })
+      } else {
+        await prisma.comment.delete({ where: { id } })
+      }
     })
 
-    return count === 0
+    return transaction
   }
 
-  return { create, many, reply, delete: deleted }
+  return { create, many, replies, reply, delete: deleted }
 }
 
 const commentGetter = CommentGetter()

@@ -16,6 +16,7 @@ import {
 import { whitespace } from '../lib/variables'
 import postGetter from '../prisma/post'
 import userGetter from '../prisma/user'
+import parseQuery from '../routers/query'
 import type { EmailData, RegisterData, UpdateBody } from '../types/body'
 import type {
   EmailIdentity,
@@ -47,8 +48,6 @@ const createUser: RequestHandler = async (req: UserIdRequest, _res, next) => {
 const updateUser: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const { username, display } = matchedData<UpdateBody>(req)
-  console.log(username)
-  console.log(display)
 
   const updated = await userGetter.update(user.id, {
     name: username,
@@ -65,7 +64,7 @@ const getSelf: RequestHandler = async (req, res) => {
 
   if (self === null) {
     res.clearCookie('access_token')
-    res.status(401).send('Unauthorized')
+    res.status(401).end()
     return
   }
 
@@ -80,7 +79,7 @@ const getUser: RequestHandler = async (req, res) => {
   const profile = await userGetter.profile(id, user?.id)
 
   if (profile === null) {
-    res.status(404).send('Not found')
+    res.status(404).end()
     return
   }
 
@@ -88,21 +87,26 @@ const getUser: RequestHandler = async (req, res) => {
   res.json(refined)
 }
 
-const getUsers: RequestHandler = async (_req, res) => {
-  const users = await userGetter.many()
-  res.json(users.map(refineUser))
+const getUsers: RequestHandler = async (req, res) => {
+  const cursor = parseQuery(req.query.cursor)
+  const users = await userGetter.many(cursor)
+  console.log(users.length)
+
+  const refined = users.map(refineUser)
+  res.json(refined)
 }
 
 const searchUsers: RequestHandler = async (req, res, next) => {
-  const search = req.query.search
+  const search = parseQuery(req.query.search)
+  const cursor = parseQuery(req.query.cursor)
 
-  if (typeof search !== 'string' || search === '') {
+  if (!search) {
     next()
     return
   }
 
   const formatted = search.trim().split(whitespace).join(' & ')
-  const users = await userGetter.search(formatted)
+  const users = await userGetter.search(formatted, cursor)
 
   const refined = users.map(refineUser)
   res.json(refined)
@@ -111,14 +115,12 @@ const searchUsers: RequestHandler = async (req, res, next) => {
 const getPosts: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
   const authorId = req.params.id as string
-  const sort = req.query.sort || 'recent'
 
-  if (typeof sort !== 'string') {
-    res.status(400).send('Invalid query')
-    return
-  }
+  const sort = parseQuery(req.query.sort) || 'recent'
+  const cursor = parseQuery(req.query.cursor)
 
-  const posts = await postGetter.many(sort, user?.id, authorId)
+  const selfId = user?.id
+  const posts = await postGetter.many({ authorId, cursor, sort, selfId })
 
   const refined = posts.map(refinePost)
   res.json(refined)
@@ -141,16 +143,11 @@ const connectEmail: RequestHandler = async (req, res) => {
   })
 
   res.clearCookie('access_token')
-  res.status(200).send('Success')
+  res.status(200).end()
 }
 
 const checkUsername: RequestHandler = async (req, res) => {
-  const name = req.query.name
-  console.log(name)
-  if (typeof name !== 'string') {
-    res.status(400).send('Invalid query')
-    return
-  }
+  const name = parseQuery(req.query.name)
 
   const user = await prisma.user.findUnique({
     where: { name },

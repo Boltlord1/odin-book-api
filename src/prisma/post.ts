@@ -1,36 +1,41 @@
 import type {
+  PostFindManyArgs,
   PostInclude,
-  PostOrderByWithRelationInput
+  PostOrderByWithRelationInput,
+  PostWhereInput
 } from '../../generated/prisma/models'
 import { destroy } from '../lib/cloudinary'
 import prisma from '../lib/primsa'
 
+interface Params {
+  authorId?: string
+  cursor?: string
+  selfId?: string
+  sort?: string
+}
+
 const PostGetter = () => {
-  const getInclude = (user?: string) => {
-    if (user) {
-      const include: PostInclude = {
+  const getInclude = (id?: string): PostInclude => {
+    if (id) {
+      return {
         images: true,
         author: true,
         _count: {
-          select: { likedBy: { where: { NOT: { id: user } } }, comments: true }
+          select: { likedBy: { where: { NOT: { id } } }, comments: true }
         },
-        likedBy: { where: { id: user } }
+        likedBy: { where: { id } }
       }
-
-      return include
     }
 
-    const include: PostInclude = {
+    return {
       images: true,
       author: true,
       _count: { select: { likedBy: true, comments: true } },
       likedBy: { where: { id: '' } }
     }
-
-    return include
   }
 
-  const getWhere = (authorId?: string) => {
+  const getWhere = (authorId?: string): PostWhereInput => {
     if (!authorId) {
       return { NOT: { authorId: null } }
     }
@@ -40,39 +45,48 @@ const PostGetter = () => {
     return where
   }
 
-  const getOrderBy = (sort?: string) => {
+  const getOrderBy = (
+    sort?: string
+  ): PostOrderByWithRelationInput | PostOrderByWithRelationInput[] => {
     if (sort === 'top') {
-      const orderBy: PostOrderByWithRelationInput[] = [
-        { likedBy: { _count: 'desc' } },
-        { createdAt: 'desc' }
-      ]
-
-      return orderBy
+      return [{ likedBy: { _count: 'desc' } }, { createdAt: 'desc' }]
     }
 
-    const orderBy: PostOrderByWithRelationInput = { createdAt: 'desc' }
-
-    return orderBy
+    return { createdAt: 'desc' }
   }
 
-  const many = async (sort: string, user?: string, authorId?: string) => {
+  const getCursor = (id?: string): PostFindManyArgs => {
+    if (!id) {
+      return {}
+    }
+
+    return { cursor: { id }, skip: 1 }
+  }
+
+  const many = async ({ authorId, cursor, selfId, sort }: Params) => {
     const where = getWhere(authorId)
-    const include = getInclude(user)
+    const include = getInclude(selfId)
     const orderBy = getOrderBy(sort)
-    const posts = await prisma.post.findMany({ where, include, orderBy })
+    const posts = await prisma.post.findMany({
+      where,
+      include,
+      orderBy,
+      take: 10,
+      ...getCursor(cursor)
+    })
 
     return posts
   }
 
-  const unique = async (id: string, user?: string) => {
-    const include = getInclude(user)
+  const unique = async (id: string, { selfId }: Params) => {
+    const include = getInclude(selfId)
     const post = await prisma.post.findUnique({ where: { id }, include })
 
     return post
   }
 
-  const search = async (search: string, user?: string) => {
-    const include = getInclude(user)
+  const search = async (search: string, { cursor, selfId }: Params) => {
+    const include = getInclude(selfId)
     const posts = await prisma.post.findMany({
       include,
       where: {
@@ -102,8 +116,11 @@ const PostGetter = () => {
       },
       orderBy: [
         { _relevance: { fields: 'title', search, sort: 'desc' } },
-        { _relevance: { fields: 'content', search, sort: 'desc' } }
-      ]
+        { _relevance: { fields: 'content', search, sort: 'desc' } },
+        { title: 'asc' }
+      ],
+      take: 10,
+      ...getCursor(cursor)
     })
 
     return posts

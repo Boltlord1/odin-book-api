@@ -18,7 +18,7 @@ type RawCommentWithoutReplies = Prisma.CommentGetPayload<{
   include: {
     author: true
     likedBy: true
-    _count: { select: { likedBy: true } }
+    _count: { select: { likedBy: true; replies: true } }
   }
 }>
 
