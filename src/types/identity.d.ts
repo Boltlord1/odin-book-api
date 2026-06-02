@@ -3,13 +3,13 @@ interface EmailIdentity {
 }
 
 interface GithubIdentity {
-  avatar: string
   display: string
   url: string
   username: string
 }
 
 interface GoogleIdentity {
+  display: string
   email: string
 }
 

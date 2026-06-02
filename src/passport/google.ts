@@ -5,9 +5,11 @@ import {
   type StrategyOptionsWithRequest,
   type VerifyCallback
 } from 'passport-google-oauth20'
+import type { PossibleUser } from '../database/user'
+import { serverError } from '../lib/errors'
 import prisma from '../lib/primsa'
 import type { Unverified, Verified } from '../types/case'
-import type { GoogleIdentity, UserWithIdentities } from '../types/prisma'
+import type { GoogleIdentity } from '../types/identity'
 
 const clientID = `${process.env.GOOGLE_CLIENT_ID}`
 const clientSecret = `${process.env.GOOGLE_SECRET}`
@@ -26,10 +28,18 @@ const verifyCallback = async (
   profile: Profile,
   done: VerifyCallback
 ) => {
+  const user = req.user as PossibleUser
   const verified = await prisma.identity.findUnique({
     where: { providerId: { provider: 'Google', id: profile.id } }
   })
 
+  if (verified && user && verified.userId !== user.id) {
+    const error = serverError(
+      'Google account is already connected to another account'
+    )
+    done(error)
+    return
+  }
   if (verified) {
     const _case: Verified = {
       type: 'verified',
@@ -44,13 +54,16 @@ const verifyCallback = async (
   const fallbackEmail = profile._json.email
   const finalEmail = email || fallbackEmail
   if (!finalEmail) {
-    done(new Error('Google account did not provide an email.'))
+    const error = serverError('Google account did not provide an email')
+    done(error)
     return
   }
 
-  const data: GoogleIdentity = { email: finalEmail }
+  const data: GoogleIdentity = {
+    email: finalEmail,
+    display: profile.displayName
+  }
 
-  const user = req.user as UserWithIdentities
   if (user) {
     const updated = await prisma.user.update({
       where: { id: user.id },

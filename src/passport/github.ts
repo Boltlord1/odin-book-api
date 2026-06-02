@@ -5,9 +5,11 @@ import {
   type StrategyOptionsWithRequest
 } from 'passport-github2'
 import type { VerifyCallback, VerifyFunctionWithRequest } from 'passport-oauth2'
+import type { PossibleUser } from '../database/user'
+import { serverError } from '../lib/errors'
 import prisma from '../lib/primsa'
 import type { Unverified, Verified } from '../types/case'
-import type { GithubIdentity, UserWithIdentities } from '../types/prisma'
+import type { GithubIdentity } from '../types/identity'
 
 const clientID = `${process.env.GITHUB_CLIENT_ID}`
 const clientSecret = `${process.env.GITHUB_SECRET}`
@@ -26,10 +28,18 @@ const verifyCallback: VerifyFunctionWithRequest = async (
   profile: Profile,
   done: VerifyCallback
 ) => {
+  const user = req.user as PossibleUser
   const verified = await prisma.identity.findUnique({
     where: { providerId: { provider: 'Github', id: profile.id } }
   })
 
+  if (verified && user && verified.userId !== user.id) {
+    const error = serverError(
+      'Github profile is already connected to another account'
+    )
+    done(error)
+    return
+  }
   if (verified) {
     const _case: Verified = {
       type: 'verified',
@@ -42,13 +52,18 @@ const verifyCallback: VerifyFunctionWithRequest = async (
 
   const username = profile.username
   if (!username) {
-    done(new Error('Github profile did not provider username'))
+    const error = serverError('Github profile did not provider username')
+    done(error)
     return
   }
 
-  const data: GithubIdentity = { username, url: profile.profileUrl }
+  const avatar = profile.photos?.[0] ? profile.photos[0].value : ''
+  const data: GithubIdentity = {
+    username,
+    url: profile.profileUrl,
+    display: profile.displayName
+  }
 
-  const user = req.user as UserWithIdentities | undefined
   if (user) {
     const updated = await prisma.user.update({
       where: { id: user.id },
@@ -66,7 +81,6 @@ const verifyCallback: VerifyFunctionWithRequest = async (
     return
   }
 
-  const avatar = profile.photos?.[0] ? profile.photos[0].value : ''
   const _case: Unverified = {
     type: 'unverified',
     id: profile.id,
