@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'express'
 import pass from 'passport'
-import type { UserWithIdentities } from '../types/prisma'
+import type { PossibleUser } from '../database/user'
+import parseQuery from '../routers/query'
 import githubStrategy from './github'
 import googleStrategy from './google'
 import jwtStrategy from './jwt'
@@ -16,17 +17,29 @@ passport.use('jwt-temp', jwtTempStrategy)
 const jwt = passport.authenticate('jwt', { session: false })
 const jwtTemp = passport.authenticate('jwt-temp', { session: false })
 
-const google = passport.authenticate('google', {
-  session: false,
-  scope: ['email', 'profile']
-})
-const github = passport.authenticate('github', { session: false })
+const google: RequestHandler = (req, res, next) => {
+  const path = parseQuery(req.query.path) || '/auth/login'
+  passport.authenticate('google', {
+    session: false,
+    scope: ['email', 'profile'],
+    state: path
+  })(req, res, next)
+}
+
+const github: RequestHandler = (req, res, next) => {
+  const path = parseQuery(req.query.path) || '/auth/login'
+  passport.authenticate('github', { session: false, state: path })(
+    req,
+    res,
+    next
+  )
+}
 
 const jwtOptional: RequestHandler = (req, res, next) => {
   passport.authenticate(
     'jwt',
     { session: false },
-    (_err: unknown, user: UserWithIdentities) => {
+    (_err: unknown, user: PossibleUser) => {
       if (user) {
         req.user = user
       }

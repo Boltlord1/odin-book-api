@@ -2,10 +2,10 @@ import { compare } from 'bcrypt'
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import { longOptions } from '../lib/cookie'
-import { serverError } from '../lib/errors'
+import { ServerError } from '../lib/error'
 import { issueJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
-import { frontendUrl } from '../lib/variables'
+import { FRONTEND_URL } from '../lib/variables'
 import type { LogInData } from '../types/body'
 import type { UserIdRequest } from '../types/request'
 
@@ -31,14 +31,14 @@ const logIn: RequestHandler = async (req, res) => {
 
   const errorMsg = 'Invalid username or password.'
   if (user === null || !user.password) {
-    const error = serverError(errorMsg)
+    const error = new ServerError(errorMsg)
     return res.status(401).json(error)
   }
 
   const hash = user.password.hash
   const match = await compare(password, hash)
   if (!match) {
-    const error = serverError(errorMsg)
+    const error = new ServerError(errorMsg)
     return res.status(401).json(error)
   }
 
@@ -49,7 +49,7 @@ const logIn: RequestHandler = async (req, res) => {
 
 const logOut: RequestHandler = (_req, res) => {
   res.clearCookie('access_token')
-  res.redirect(`${frontendUrl}/auth/login`)
+  res.redirect(`${FRONTEND_URL}/auth/login`)
 }
 
 const verify: RequestHandler = (_req, res) => {

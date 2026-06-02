@@ -1,6 +1,6 @@
 import jsonWebToken from 'jsonwebtoken'
 import type { Provider } from '../../generated/prisma/enums'
-import type { OauthIdentity } from '../types/prisma'
+import type { OauthIdentity } from '../types/identity'
 import type { LogInPayload, TempPayload } from '../types/temp'
 
 const PRIV_KEY = `${process.env.PRIV_KEY}`.replace(/\\n/g, '\n')

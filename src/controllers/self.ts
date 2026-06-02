@@ -8,7 +8,7 @@ import {
   type UserWithIdentities,
   updateSelf
 } from '../database/user'
-import { serverError } from '../lib/errors'
+import { ServerError } from '../lib/error'
 import prisma from '../lib/primsa'
 import parseQuery from '../routers/query'
 import type { EmailData, RegisterData, UpdateBody } from '../types/body'
@@ -50,7 +50,7 @@ export const connectEmail: RequestHandler = async (req, res) => {
   const self = req.user as UserWithIdentities
   const exists = self.identities.find((i) => i.provider === 'Email')
   if (exists) {
-    const error = serverError('This account already has an email')
+    const error = new ServerError('This account already has an email')
     res.status(409).json(error)
     return
   }

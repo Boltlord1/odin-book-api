@@ -6,7 +6,7 @@ import {
 } from 'passport-github2'
 import type { VerifyCallback, VerifyFunctionWithRequest } from 'passport-oauth2'
 import type { PossibleUser } from '../database/user'
-import { serverError } from '../lib/errors'
+import { ClientError } from '../lib/error'
 import prisma from '../lib/primsa'
 import type { Unverified, Verified } from '../types/case'
 import type { GithubIdentity } from '../types/identity'
@@ -34,12 +34,14 @@ const verifyCallback: VerifyFunctionWithRequest = async (
   })
 
   if (verified && user && verified.userId !== user.id) {
-    const error = serverError(
+    const error = new ClientError(
+      'connected',
       'Github profile is already connected to another account'
     )
     done(error)
     return
   }
+
   if (verified) {
     const _case: Verified = {
       type: 'verified',
@@ -52,7 +54,10 @@ const verifyCallback: VerifyFunctionWithRequest = async (
 
   const username = profile.username
   if (!username) {
-    const error = serverError('Github profile did not provider username')
+    const error = new ClientError(
+      'profile',
+      'Github profile did not provide username'
+    )
     done(error)
     return
   }

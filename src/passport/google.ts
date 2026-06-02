@@ -6,7 +6,7 @@ import {
   type VerifyCallback
 } from 'passport-google-oauth20'
 import type { PossibleUser } from '../database/user'
-import { serverError } from '../lib/errors'
+import { ClientError } from '../lib/error'
 import prisma from '../lib/primsa'
 import type { Unverified, Verified } from '../types/case'
 import type { GoogleIdentity } from '../types/identity'
@@ -34,7 +34,8 @@ const verifyCallback = async (
   })
 
   if (verified && user && verified.userId !== user.id) {
-    const error = serverError(
+    const error = new ClientError(
+      'connected',
       'Google account is already connected to another account'
     )
     done(error)
@@ -54,7 +55,10 @@ const verifyCallback = async (
   const fallbackEmail = profile._json.email
   const finalEmail = email || fallbackEmail
   if (!finalEmail) {
-    const error = serverError('Google account did not provide an email')
+    const error = new ClientError(
+      'profile',
+      'Google account did not provide an email'
+    )
     done(error)
     return
   }

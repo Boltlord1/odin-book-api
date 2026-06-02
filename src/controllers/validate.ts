@@ -1,7 +1,7 @@
 import type { RequestHandler } from 'express'
 import { validationResult } from 'express-validator'
 import { MulterError } from 'multer'
-import { clientError } from '../lib/errors'
+import { ClientError } from '../lib/error'
 import { avatar, form, images } from '../lib/multer'
 
 const validateInitial: RequestHandler = (req, _res, next) => {
@@ -21,7 +21,7 @@ const validateBody: RequestHandler = (req, _res, next) => {
         continue
       }
 
-      const error = clientError(result.path, result.msg)
+      const error = new ClientError(result.path, result.msg)
       errors.push(error)
     }
   }
@@ -35,10 +35,13 @@ const validateAvatar: RequestHandler = (req, res, next) => {
   avatar(req, res, (err) => {
     if (err instanceof MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        const error = clientError('avatar', 'File size must be less than 5mb')
+        const error = new ClientError(
+          'avatar',
+          'File size must be less than 5mb'
+        )
         errors.push(error)
       } else {
-        const error = clientError(
+        const error = new ClientError(
           'avatar',
           `Unknown upload error: ${err.message}`
         )
@@ -47,7 +50,7 @@ const validateAvatar: RequestHandler = (req, res, next) => {
     }
 
     if (err && err.message === 'INVALID_FILE_TYPE') {
-      const error = clientError('avatar', 'Avatar must be a png or jpeg')
+      const error = new ClientError('avatar', 'Avatar must be a png or jpeg')
       errors.push(error)
     }
 
@@ -61,19 +64,19 @@ const validateImages: RequestHandler = (req, res, next) => {
   images(req, res, (err) => {
     if (err instanceof MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        const error = clientError(
+        const error = new ClientError(
           'images',
           'File size for each image must be less than 5mb'
         )
         errors.push(error)
       } else if (err.code === 'LIMIT_FILE_COUNT') {
-        const error = clientError(
+        const error = new ClientError(
           'images',
           'Each post can only have up to 5 images'
         )
         errors.push(error)
       } else {
-        const error = clientError(
+        const error = new ClientError(
           'images',
           `Unknown upload error: ${err.message}`
         )
@@ -82,7 +85,10 @@ const validateImages: RequestHandler = (req, res, next) => {
     }
 
     if (err && err.message === 'INVALID_FILE_TYPE') {
-      const error = clientError('images', 'Image must be a png, jpeg or gif')
+      const error = new ClientError(
+        'images',
+        'Image must be a png, jpeg or gif'
+      )
       errors.push(error)
     }
 

@@ -5,7 +5,7 @@ import { longOptions, tempOptions } from '../lib/cookie'
 import shortId from '../lib/cuid2'
 import { issueJwt, issueTempJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
-import { frontendUrl } from '../lib/variables'
+import { FRONTEND_URL } from '../lib/variables'
 import type { OauthData } from '../types/body'
 import type { Case } from '../types/case'
 import type { AvatarRequest } from '../types/request'
@@ -17,11 +17,11 @@ const oauthCallback = (provider: Provider) => {
     if (_case.type === 'verified') {
       const token = issueJwt(_case.id)
       res.cookie('access_token', token, longOptions)
-      res.redirect(`${frontendUrl}`)
+      res.redirect(`${FRONTEND_URL}`)
     } else {
       const token = issueTempJwt(_case.id, _case.avatar, _case.data, provider)
       res.cookie('temp_token', token, tempOptions)
-      res.redirect(`${frontendUrl}/auth/signup/${provider.toLowerCase()}`)
+      res.redirect(`${FRONTEND_URL}/auth/signup/${provider.toLowerCase()}`)
     }
   }
 
@@ -33,7 +33,7 @@ const oauthSignUp = (provider: Provider) => {
     const payload = req.user as TempPayload
     const avatar = req.avatar
     if (payload.provider !== provider) {
-      res.json(null)
+      res.status(400).end()
       return
     }
 

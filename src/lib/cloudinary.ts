@@ -1,5 +1,5 @@
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
-import type { ServerError } from '../types/error'
+import { ServerError } from './error'
 
 const cloud_name = `${process.env.CLOUD_NAME}`
 const api_key = `${process.env.CLOUD_KEY}`
@@ -22,7 +22,7 @@ const avatar = async (file: Express.Multer.File) => {
     return response.public_id
   } catch (err) {
     console.log(err)
-    const error: ServerError = { type: 'server', msg: 'Error uploading avatar' }
+    const error = new ServerError('Error uploading avatar')
     return error
   }
 }
@@ -51,7 +51,7 @@ const images = async (files: Express.Multer.File[]) => {
     )
     await Promise.all(destroy)
 
-    const error: ServerError = { type: 'server', msg: 'Error uploading images' }
+    const error = new ServerError('Error uploading images')
     return error
   }
 
@@ -71,7 +71,7 @@ const url = async (url: string) => {
     return response.public_id
   } catch (err) {
     console.log(err)
-    const error: ServerError = { type: 'server', msg: 'Error uploading avatar' }
+    const error = new ServerError('Error uploading avatar')
     return error
   }
 }

@@ -1,5 +1,5 @@
 import type { Provider } from '../../generated/prisma/enums'
-import type { OauthIdentity } from './prisma'
+import type { OauthIdentity } from './identity'
 
 interface LogInPayload {
   iat: number

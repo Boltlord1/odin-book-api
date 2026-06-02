@@ -1,4 +1,2 @@
-const frontendUrl = `${process.env.FRONT_URL}`
-const whitespace = /\s+/
-
-export { frontendUrl, whitespace }
+export const FRONTEND_URL = `${process.env.FRONT_URL}`
+export const whitespace = /\s+/
