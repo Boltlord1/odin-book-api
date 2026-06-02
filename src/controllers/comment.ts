@@ -1,27 +1,19 @@
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
-import type { CommentCreateInput } from '../../generated/prisma/models'
-import shortId from '../lib/cuid2'
-import { refineComment } from '../lib/refine'
-import commentGetter from '../prisma/comment'
+import { createComment, deleteComment, findComments } from '../database/comment'
+import type { PossibleUser, UserWithIdentities } from '../database/user'
+import { refineLike } from '../lib/refine'
 import parseQuery from '../routers/query'
 import type { ContentData } from '../types/body'
-import type { PossibleUser, UserWithIdentities } from '../types/prisma'
 
-const createComment: RequestHandler = async (req, res) => {
+const postComment: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const postId = req.params.id as string
 
   const { content } = matchedData<ContentData>(req)
-  const data: CommentCreateInput = {
-    id: shortId(),
-    content,
-    post: { connect: { id: postId } },
-    author: { connect: { id: user.id } }
-  }
-  const comment = await commentGetter.create(data)
+  const [comment] = await createComment(postId, user.id, content)
 
-  const refined = refineComment(comment)
+  const refined = refineLike(comment)
   res.status(201).json(refined)
 }
 
@@ -29,28 +21,32 @@ const getComments: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
   const postId = req.params.id as string
 
-  const sort = parseQuery(req.query.sort) || 'recent'
+  const sort = parseQuery(req.query.sort)
   const cursor = parseQuery(req.query.cursor)
 
   const selfId = user?.id
-  const comments = await commentGetter.many(postId, { cursor, selfId, sort })
+  const comments = await findComments(postId, { cursor, selfId, sort })
 
-  const refined = comments.map(refineComment)
+  const refined = comments.map(refineLike)
   res.json(refined)
 }
 
-const deleteComment: RequestHandler = async (req, res) => {
+const delComment: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
-  const id = req.params.id as string
+  const postId = parseQuery(req.query.post)
+  const commentId = req.params.comment
 
-  const bool = await commentGetter.delete(id, user.id)
-
-  if (bool) {
-    res.status(403).end()
+  if (!postId || typeof commentId !== 'string') {
+    res.status(400).end()
     return
   }
 
-  res.status(200).end()
+  const deleted = await deleteComment(postId, commentId, user.id)
+  if (deleted) {
+    res.status(200).end()
+    return
+  }
+  res.status(403).end()
 }
 
-export { createComment, deleteComment, getComments }
+export { delComment, getComments, postComment }

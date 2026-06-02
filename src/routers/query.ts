@@ -1,9 +1,11 @@
 function parseQuery(query: unknown) {
   if (typeof query === 'string') {
-    return query
+    const str = query.trim()
+    return str === '' ? undefined : str
   }
   if (Array.isArray(query) && typeof query[0] === 'string') {
-    return query[0]
+    const str = query[0].trim()
+    return str === '' ? undefined : str
   }
 }
 

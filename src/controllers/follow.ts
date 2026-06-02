@@ -1,16 +1,20 @@
 import type { RequestHandler } from 'express'
+import type { UserWithIdentities } from '../database/user'
 import prisma from '../lib/primsa'
-import type { UserWithIdentities } from '../types/prisma'
 
 const changeFollow = (action: 'connect' | 'disconnect') => {
   const change: RequestHandler = async (req, res) => {
     const user = req.user as UserWithIdentities
     const id = req.params.id as string
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { following: { [action]: { id } } }
-    })
+    const count = action === 'connect' ? { increment: 1 } : { decrement: 1 }
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { followingCount: count, following: { [action]: { id } } }
+      }),
+      prisma.user.update({ where: { id }, data: { followerCount: count } })
+    ])
 
     res.json(true)
   }

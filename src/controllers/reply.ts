@@ -1,28 +1,25 @@
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
-import type { ReplyCreateInput } from '../../generated/prisma/models'
-import shortId from '../lib/cuid2'
-import prisma from '../lib/primsa'
-import { refineReply } from '../lib/refine'
-import commentGetter from '../prisma/comment'
+import { createReply, deleteReply, findReplies } from '../database/reply'
+import type { PossibleUser, UserWithIdentities } from '../database/user'
+import { refineLike } from '../lib/refine'
 import parseQuery from '../routers/query'
 import type { ContentData } from '../types/body'
-import type { PossibleUser, UserWithIdentities } from '../types/prisma'
 
-const createReply: RequestHandler = async (req, res) => {
+const postReply: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
+  const postId = parseQuery(req.query.post)
   const commentId = req.params.id as string
 
-  const { content } = matchedData<ContentData>(req)
-  const data: ReplyCreateInput = {
-    id: shortId(),
-    content,
-    comment: { connect: { id: commentId } },
-    author: { connect: { id: user.id } }
+  if (!postId) {
+    res.status(404).end()
+    return
   }
 
-  const reply = await commentGetter.reply(data)
-  const refined = refineReply(reply)
+  const { content } = matchedData<ContentData>(req)
+  const [reply] = await createReply(postId, commentId, user.id, content)
+
+  const refined = refineLike(reply)
   res.status(201).json(refined)
 }
 
@@ -32,26 +29,29 @@ const getReplies: RequestHandler = async (req, res) => {
   const cursor = parseQuery(req.query.cursor)
 
   const selfId = user?.id
-  const replies = await commentGetter.replies(commentId, { cursor, selfId })
+  const replies = await findReplies(commentId, { cursor, selfId })
 
-  const refined = replies.map(refineReply)
+  const refined = replies.map(refineLike)
   res.json(refined)
 }
 
-const deleteReply: RequestHandler = async (req, res) => {
+const delReply: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
-  const id = req.params.id as string
+  const postId = parseQuery(req.query.post)
+  const commentId = parseQuery(req.query.comment)
+  const replyId = req.params.reply
 
-  const { count } = await prisma.reply.deleteMany({
-    where: { id, authorId: user.id }
-  })
-
-  if (count === 0) {
-    res.status(404).end()
+  if (!(postId && commentId) || typeof replyId !== 'string') {
+    res.status(400).end()
     return
   }
 
-  res.status(200).end()
+  const deleted = await deleteReply(replyId, user.id, postId, commentId)
+  if (deleted) {
+    res.status(200).end()
+    return
+  }
+  res.status(404).end()
 }
 
-export { createReply, deleteReply, getReplies }
+export { delReply, getReplies, postReply }

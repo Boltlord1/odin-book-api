@@ -1,16 +1,16 @@
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
+import { deletePost, findPost, findPosts } from '../database/post'
+import type { PossibleUser, UserWithIdentities } from '../database/user'
 import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
-import { refinePost } from '../lib/refine'
+import { refineLike } from '../lib/refine'
 import { whitespace } from '../lib/variables'
-import postGetter from '../prisma/post'
 import parseQuery from '../routers/query'
 import type { PostData } from '../types/body'
-import type { PossibleUser, UserWithIdentities } from '../types/prisma'
 import type { PostRequest } from '../types/request'
 
-const createPost: RequestHandler = async (req: PostRequest, res, next) => {
+export const postPost: RequestHandler = async (req: PostRequest, res, next) => {
   const user = req.user as UserWithIdentities
 
   const { title, content } = matchedData<PostData>(req)
@@ -30,64 +30,60 @@ const createPost: RequestHandler = async (req: PostRequest, res, next) => {
   next()
 }
 
-const getPosts: RequestHandler = async (req, res) => {
-  const sort = parseQuery(req.query.sort) || 'recent'
+export const getPosts: RequestHandler = async (req, res) => {
+  const sort = parseQuery(req.query.sort)
   const cursor = parseQuery(req.query.cursor)
 
   const user = req.user as PossibleUser
   const selfId = user?.id
 
-  const posts = await postGetter.many({ sort, cursor, selfId })
-  const refined = posts.map(refinePost)
+  const posts = await findPosts({ cursor, selfId, sort })
+  const refined = posts.map(refineLike)
   res.json(refined)
 }
 
-const getPost: RequestHandler = async (req, res) => {
+export const getPost: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser
   const postId = req.params.id as string
 
   const selfId = user?.id
-  const post = await postGetter.unique(postId, { selfId })
+  const post = await findPost(postId, { selfId })
 
   if (post === null) {
-    res.status(404).send('Not found')
+    res.status(404).end()
     return
   }
 
-  const refined = refinePost(post)
+  const refined = refineLike(post)
   res.json(refined)
 }
 
-const searchPosts: RequestHandler = async (req, res, next) => {
+export const getSearch: RequestHandler = async (req, res, next) => {
   const search = parseQuery(req.query.search)
-  const cursor = parseQuery(req.query.cursor)
 
   if (!search) {
     next()
     return
   }
 
+  const cursor = parseQuery(req.query.cursor)
   const user = req.user as PossibleUser
   const selfId = user?.id
   const formatted = search.trim().split(whitespace).join(' & ')
-  const posts = await postGetter.search(formatted, { cursor, selfId })
+  const posts = await findPosts({ cursor, search: formatted, selfId })
 
-  const refined = posts.map(refinePost)
+  const refined = posts.map(refineLike)
   res.json(refined)
 }
 
-const deletePost: RequestHandler = async (req, res) => {
+export const delPost: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const id = req.params.id as string
 
-  const bool = await postGetter.delete(id, user.id)
-
-  if (bool) {
+  const { count } = await deletePost(id, user.id)
+  if (!count) {
     res.status(404).end()
     return
   }
-
   res.status(200).end()
 }
-
-export { createPost, deletePost, getPost, getPosts, searchPosts }

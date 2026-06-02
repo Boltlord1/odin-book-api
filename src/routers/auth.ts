@@ -7,7 +7,7 @@ import {
   googleCallback,
   googleSignUp
 } from '../controllers/oauth'
-import { connectEmail, createUser } from '../controllers/user'
+import { connectEmail, postUser } from '../controllers/self'
 import {
   validateAvatar,
   validateBody,
@@ -39,7 +39,7 @@ router.post(
   ...password,
   validateBody,
   validateFinal,
-  createUser,
+  postUser,
   uploadAvatar,
   signIn
 )

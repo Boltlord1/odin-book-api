@@ -1,0 +1,16 @@
+-- AlterTable
+ALTER TABLE "Chat" ALTER COLUMN "messageCount" SET DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "Comment" ALTER COLUMN "replyCount" SET DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "Post" ADD COLUMN     "replyCount" INTEGER NOT NULL DEFAULT 0,
+ALTER COLUMN "commentCount" SET DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "commentCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "postCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "replyCount" INTEGER NOT NULL DEFAULT 0,
+ALTER COLUMN "followerCount" SET DEFAULT 0,
+ALTER COLUMN "followingCount" SET DEFAULT 0;

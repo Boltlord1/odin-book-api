@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createReply, deleteReply, getReplies } from '../controllers/reply'
+import { delReply, getReplies, postReply } from '../controllers/reply'
 import {
   validateBody,
   validateFinal,
@@ -11,7 +11,7 @@ import { jwt, jwtOptional } from '../passport/passport'
 const router = Router()
 
 router.get('/:id', jwtOptional, getReplies)
-router.delete('/:id', jwt, deleteReply)
+router.delete('/:id', jwt, delReply)
 router.post(
   '/:id',
   jwt,
@@ -19,7 +19,7 @@ router.post(
   content('Reply'),
   validateBody,
   validateFinal,
-  createReply
+  postReply
 )
 
 export default router

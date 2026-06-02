@@ -5,7 +5,7 @@ import express from 'express'
 import { validateInitial } from './controllers/validate'
 import { frontendUrl } from './lib/variables'
 import passport from './passport/passport'
-import router from './routers'
+import router from './routers/index'
 
 const app = express()
 

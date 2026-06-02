@@ -1,13 +1,11 @@
 import type { RequestHandler } from 'express'
+import type { UserWithIdentities } from '../database/user'
+import { updateSelf } from '../database/user'
 import { avatar, destroy, images, url } from '../lib/cloudinary'
 import { longOptions } from '../lib/cookie'
 import shortId from '../lib/cuid2'
-import { clientError } from '../lib/errors'
 import { issueJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
-import { refineSelf } from '../lib/refine'
-import userGetter from '../prisma/user'
-import type { UserWithIdentities } from '../types/prisma'
 import type {
   AvatarRequest,
   PostRequest,
@@ -15,7 +13,11 @@ import type {
 } from '../types/request'
 import type { TempPayload } from '../types/temp'
 
-const uploadAvatar: RequestHandler = async (req: UserIdRequest, res, next) => {
+export const uploadAvatar: RequestHandler = async (
+  req: UserIdRequest,
+  res,
+  next
+) => {
   const file = req.file
   if (!file) {
     next()
@@ -32,11 +34,15 @@ const uploadAvatar: RequestHandler = async (req: UserIdRequest, res, next) => {
     return
   }
 
-  await prisma.user.update({ where: { id }, data: { avatar: result } })
+  await updateSelf(id, { avatar: result })
   next()
 }
 
-const uploadAuto: RequestHandler = async (req: AvatarRequest, res, next) => {
+export const uploadAuto: RequestHandler = async (
+  req: AvatarRequest,
+  res,
+  next
+) => {
   const payload = req.user as TempPayload
   const result = await url(payload.avatar)
   if (typeof result !== 'string') {
@@ -48,7 +54,7 @@ const uploadAuto: RequestHandler = async (req: AvatarRequest, res, next) => {
   next()
 }
 
-const uploadImages: RequestHandler = async (req: PostRequest, res) => {
+export const uploadImages: RequestHandler = async (req: PostRequest, res) => {
   const files = req.files as Express.Multer.File[]
 
   const result = await images(files)
@@ -65,11 +71,10 @@ const uploadImages: RequestHandler = async (req: PostRequest, res) => {
   res.status(201).json(postId)
 }
 
-const updateAvatar: RequestHandler = async (req, res) => {
+export const updateAvatar: RequestHandler = async (req, res, next) => {
   const file = req.file as Express.Multer.File
   if (!file) {
-    const error = clientError('avatar', 'Avatar is required')
-    res.status(400).json([error])
+    next()
     return
   }
 
@@ -80,13 +85,10 @@ const updateAvatar: RequestHandler = async (req, res) => {
   }
 
   const user = req.user as UserWithIdentities
-  const updated = await userGetter.avatar(user.id, result)
+  const updated = await updateSelf(user.id, { avatar: result })
   if (user.avatar) {
     await destroy(user.avatar)
   }
 
-  const refined = refineSelf(updated)
-  res.json(refined)
+  res.json(updated)
 }
-
-export { updateAvatar, uploadAuto, uploadAvatar, uploadImages }

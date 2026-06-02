@@ -4,8 +4,8 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
   previewFeatures = ["fullTextSearchPostgres"]
 }
 
@@ -18,21 +18,29 @@ datasource db {
 }
 
 model User {
-  id            String     @id
-  name          String     @unique
-  display       String
-  avatar        String?
-  identities    Identity[]
-  posts         Post[]     @relation("author")
-  comments      Comment[]
-  replies       Reply[]
-  messages      Message[]
-  chats         Chat[]
-  likedPosts    Post[]     @relation("liked_posts")
-  likedComments Comment[]  @relation("liked_comments")
-  likedReplies  Reply[]    @relation("liked_replies")
-  following     User[]     @relation("follow")
-  followers     User[]     @relation("follow")
+  id             String     @id
+  name           String     @unique
+  display        String
+  avatar         String?
+  deleted        Boolean    @default(false)
+  followingCount Int        @default(0)
+  followerCount  Int        @default(0)
+  postCount      Int        @default(0)
+  commentCount   Int        @default(0)
+  replyCount     Int        @default(0)
+  identities     Identity[]
+  posts          Post[]     @relation("author")
+  comments       Comment[]
+  replies        Reply[]
+  messages       Message[]
+  chats          Chat[]
+  visibleChats   Chat[]     @relation("visible_chats")
+  likedPosts     Post[]     @relation("liked_posts")
+  likedComments  Comment[]  @relation("liked_comments")
+  likedReplies   Reply[]    @relation("liked_replies")
+  following      User[]     @relation("follow")
+  followers      User[]     @relation("follow")
+  password       Password?
 }
 
 model Identity {
@@ -40,11 +48,19 @@ model Identity {
   id       String
   user     User     @relation(fields: [userId], references: [id])
   userId   String
+
   /// [IdentityDataType]
-  data     Json
+  data Json
 
   @@id(name: "providerId", [provider, id])
   @@unique(name: "connection", [userId, provider])
+}
+
+model Password {
+  id     String @id
+  hash   String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
 }
 
 enum Provider {
@@ -54,15 +70,19 @@ enum Provider {
 }
 
 model Post {
-  id        String    @id
-  title     String
-  content   String?
-  createdAt DateTime  @default(now())
-  author    User?     @relation("author", fields: [authorId], references: [id])
-  authorId  String?
-  comments  Comment[]
-  likedBy   User[]    @relation("liked_posts")
-  images    Image[]
+  id           String    @id
+  title        String
+  content      String?
+  createdAt    DateTime  @default(now())
+  deleted      Boolean   @default(false)
+  likeCount    Int       @default(0)
+  commentCount Int       @default(0)
+  replyCount   Int       @default(0)
+  author       User?     @relation("author", fields: [authorId], references: [id])
+  authorId     String?
+  comments     Comment[]
+  likedBy      User[]    @relation("liked_posts")
+  images       Image[]
 }
 
 model Image {
@@ -75,21 +95,26 @@ model Image {
 }
 
 model Comment {
-  id        String   @id
-  content   String
-  createdAt DateTime @default(now())
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  String?
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    String
-  replies   Reply[]
-  likedBy   User[]   @relation("liked_comments")
+  id         String   @id
+  content    String
+  createdAt  DateTime @default(now())
+  deleted    Boolean  @default(false)
+  likeCount  Int      @default(0)
+  replyCount Int      @default(0)
+  author     User?    @relation(fields: [authorId], references: [id])
+  authorId   String?
+  post       Post     @relation(fields: [postId], references: [id])
+  postId     String
+  replies    Reply[]
+  likedBy    User[]   @relation("liked_comments")
 }
 
 model Reply {
   id        String   @id
   content   String
   createdAt DateTime @default(now())
+  deleted   Boolean  @default(false)
+  likeCount Int      @default(0)
   author    User?    @relation(fields: [authorId], references: [id])
   authorId  String?
   comment   Comment  @relation(fields: [commentId], references: [id])
@@ -101,6 +126,7 @@ model Message {
   id        String   @id
   content   String
   createdAt DateTime @default(now())
+  deleted   Boolean  @default(false)
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
   chat      Chat     @relation(fields: [chatId], references: [id])
@@ -108,8 +134,16 @@ model Message {
 }
 
 model Chat {
-  id       String    @id
-  users    User[]
-  messages Message[]
-  hash     String    @unique
+  id           String    @id
+  name         String?
+  messageCount Int       @default(0)
+  users        User[]
+  visibileTo   User[]    @relation("visible_chats")
+  messages     Message[]
+  type         ChatType
+}
+
+enum ChatType {
+  Private
+  Group
 }

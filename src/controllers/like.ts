@@ -1,55 +1,38 @@
 import type { RequestHandler } from 'express'
+import type {
+  CommentUpdateInput,
+  PostUpdateInput,
+  ReplyUpdateInput
+} from '../../generated/prisma/models'
+import type { UserWithIdentities } from '../database/user'
 import prisma from '../lib/primsa'
-import type { UserWithIdentities } from '../types/prisma'
 
 type type = 'post' | 'comment' | 'reply'
-const getRow = (type: type) => {
-  if (type === 'post') {
-    return 'likedPosts'
-  }
-
-  if (type === 'comment') {
-    return 'likedComments'
-  }
-
-  return 'likedReplies'
+const updaters = {
+  post: (id: string, data: PostUpdateInput) =>
+    prisma.post.update({ where: { id }, data }),
+  comment: (id: string, data: CommentUpdateInput) =>
+    prisma.comment.update({ where: { id }, data }),
+  reply: (id: string, data: ReplyUpdateInput) =>
+    prisma.reply.update({ where: { id }, data })
 }
 
-const changeLike = (type: type, action: 'connect' | 'disconnect') => {
+export const changeLike = (type: type, action: 'connect' | 'disconnect') => {
   const change: RequestHandler = async (req, res) => {
-    const user = req.user as UserWithIdentities
-
-    const row = getRow(type)
     const id = req.params.id
 
-    if (id === null) {
-      res.status(404).send('Not found')
+    if (typeof id !== 'string') {
+      res.status(404).end()
       return
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { [`${row}`]: { [`${action}`]: { id } } }
-    })
+    const user = req.user as UserWithIdentities
+    const likeCount = action === 'connect' ? { increment: 1 } : { decrement: 1 }
+    const likedBy = { [action]: { id: user.id } }
+    await updaters[type](id, { likeCount, likedBy })
 
     res.status(202).send('Success')
   }
 
   return change
-}
-
-const likePost = changeLike('post', 'connect')
-const unlikePost = changeLike('post', 'disconnect')
-const likeComment = changeLike('comment', 'connect')
-const unlikeComment = changeLike('comment', 'disconnect')
-const likeReply = changeLike('reply', 'connect')
-const unlikeReply = changeLike('reply', 'disconnect')
-
-export {
-  likeComment,
-  likePost,
-  likeReply,
-  unlikeComment,
-  unlikePost,
-  unlikeReply
 }

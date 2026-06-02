@@ -1,5 +1,10 @@
 import { Router } from 'express'
-import { createMessage, getChat, getChats } from '../controllers/chat'
+import {
+  getChats,
+  getMessages,
+  getPrivateChat,
+  postPrivateMessage
+} from '../controllers/chat'
 import {
   validateBody,
   validateFinal,
@@ -11,15 +16,16 @@ import { jwt } from '../passport/passport'
 const router = Router()
 
 router.get('/', jwt, getChats)
-router.get('/:id', jwt, getChat)
+router.get('/:id', jwt, getMessages)
+router.get('/private/:id', jwt, getPrivateChat)
 router.post(
-  '/:id',
+  '/private/:id',
   jwt,
   validateForm,
   content('Message'),
   validateBody,
   validateFinal,
-  createMessage
+  postPrivateMessage
 )
 
 export default router

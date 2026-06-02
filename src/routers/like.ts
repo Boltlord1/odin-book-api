@@ -1,23 +1,16 @@
 import { Router } from 'express'
-import {
-  likeComment,
-  likePost,
-  likeReply,
-  unlikeComment,
-  unlikePost,
-  unlikeReply
-} from '../controllers/like'
+import { changeLike } from '../controllers/like'
 import { jwt } from '../passport/passport'
 
 const router = Router()
 
-router.post('/post/:id', jwt, likePost)
-router.delete('/post/:id', jwt, unlikePost)
+router.post('/post/:id', jwt, changeLike('post', 'connect'))
+router.delete('/post/:id', jwt, changeLike('post', 'disconnect'))
 
-router.post('/comment/:id', jwt, likeComment)
-router.delete('/comment/:id', jwt, unlikeComment)
+router.post('/comment/:id', jwt, changeLike('comment', 'connect'))
+router.delete('/comment/:id', jwt, changeLike('comment', 'disconnect'))
 
-router.post('/reply/:id', jwt, likeReply)
-router.delete('/reply/:id', jwt, unlikeReply)
+router.post('/reply/:id', jwt, changeLike('reply', 'connect'))
+router.delete('/reply/:id', jwt, changeLike('reply', 'disconnect'))
 
 export default router

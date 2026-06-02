@@ -7,7 +7,6 @@ import { issueJwt } from '../lib/issueJwt'
 import prisma from '../lib/primsa'
 import { frontendUrl } from '../lib/variables'
 import type { LogInData } from '../types/body'
-import type { EmailIdentity } from '../types/prisma'
 import type { UserIdRequest } from '../types/request'
 
 const signIn: RequestHandler = (req: UserIdRequest, res) => {
@@ -27,17 +26,17 @@ const logIn: RequestHandler = async (req, res) => {
         { identities: { some: { AND: { provider: 'Email', id: username } } } }
       ]
     },
-    include: { identities: { where: { provider: 'Email' } } }
+    select: { id: true, password: true }
   })
 
   const errorMsg = 'Invalid username or password.'
-  if (user === null || !user.identities[0]) {
+  if (user === null || !user.password) {
     const error = serverError(errorMsg)
     return res.status(401).json(error)
   }
 
-  const data = user.identities[0].data as EmailIdentity
-  const match = await compare(password, data.hash)
+  const hash = user.password.hash
+  const match = await compare(password, hash)
   if (!match) {
     const error = serverError(errorMsg)
     return res.status(401).json(error)
