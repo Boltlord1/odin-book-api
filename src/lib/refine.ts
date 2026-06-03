@@ -23,11 +23,13 @@ export const refineLike = <T extends LikeParam>(obj: T) => {
 }
 
 interface MessageParam {
-  messages: unknown[]
+  messages?: unknown[]
+  users: unknown[]
 }
 
 export const refineChat = <T extends MessageParam>(obj: T) => {
-  const { messages, ...rest } = obj
-  const message = messages[0] ?? null
-  return { ...rest, message }
+  const { users, messages, ...rest } = obj
+  const message = messages ? messages[0] : null
+  const user = users[0]
+  return { ...rest, message, user }
 }

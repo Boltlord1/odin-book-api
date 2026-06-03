@@ -3,7 +3,8 @@ import {
   getChats,
   getMessages,
   getPrivateChat,
-  postPrivateMessage
+  postMessage,
+  putHideChat
 } from '../controllers/chat'
 import {
   validateBody,
@@ -18,14 +19,16 @@ const router = Router()
 router.get('/', jwt, getChats)
 router.get('/:id', jwt, getMessages)
 router.get('/private/:id', jwt, getPrivateChat)
+
+router.put('/:id', jwt, putHideChat)
 router.post(
-  '/private/:id',
+  '/:id',
   jwt,
   validateForm,
   content('Message'),
   validateBody,
   validateFinal,
-  postPrivateMessage
+  postMessage
 )
 
 export default router

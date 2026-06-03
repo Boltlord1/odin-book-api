@@ -11,10 +11,16 @@ export const findChats = (id: string) =>
     }
   })
 
+export const hideChat = (id: string, selfId: string) =>
+  prisma.chat.update({
+    where: { id },
+    data: { visibileTo: { disconnect: { id: selfId } } }
+  })
+
 export const findPrivateChat = (userId: string, otherId: string) =>
   prisma.$transaction(async (tx) => {
     const id = [userId, otherId].sort().join(':')
-    const chat = await tx.chat.findFirst({
+    const chat = await tx.chat.findUnique({
       where: { id },
       include: { users: { where: { id: otherId } } }
     })
@@ -33,26 +39,25 @@ export const findPrivateChat = (userId: string, otherId: string) =>
     })
   })
 
-export const createPrivateMessage = (
+export const createMessage = async (
   authorId: string,
   chatId: string,
   content: string
-) => {
-  const otherId = chatId.split(':').find((id) => id !== authorId) as string
-
-  return prisma.$transaction([
-    prisma.message.create({
-      data: { id: shortId(), authorId, chatId, content }
-    }),
-    prisma.chat.update({
-      where: { id: chatId, users: { some: { id: authorId } } },
-      data: {
-        visibileTo: { connect: [{ id: authorId }, { id: otherId }] },
-        messageCount: { increment: 1 }
-      }
+) =>
+  prisma.$transaction(async (tx) => {
+    const users = await tx.user.findMany({
+      where: { chats: { some: { id: chatId } } },
+      select: { id: true }
     })
-  ])
-}
+
+    return tx.$transaction([
+      tx.message.create({ data: { id: shortId(), chatId, authorId, content } }),
+      tx.chat.update({
+        where: { id: chatId },
+        data: { messageCount: { increment: 1 }, visibileTo: { set: users } }
+      })
+    ])
+  })
 
 export const findMessages = (chatId: string, cursor?: string) => {
   const args: MessageFindManyArgs = {}

@@ -1,10 +1,11 @@
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
 import {
-  createPrivateMessage,
+  createMessage,
   findChats,
   findMessages,
-  findPrivateChat
+  findPrivateChat,
+  hideChat
 } from '../database/chat'
 import type { UserWithIdentities } from '../database/user'
 import { refineChat } from '../lib/refine'
@@ -18,20 +19,24 @@ export const getChats: RequestHandler = async (req, res) => {
   res.json(refined)
 }
 
-export const getPrivateChat: RequestHandler = async (req, res) => {
+export const putHideChat: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
-  const id = req.params.id
+  const chatId = req.params.id as string
 
-  if (typeof id !== 'string' || user.id === id) {
-    res.status(404).end()
-    return
-  }
-
-  const chat = await findPrivateChat(user.id, id)
-  res.json(chat)
+  await hideChat(chatId, user.id)
+  res.status(200).end()
 }
 
-export const postPrivateMessage: RequestHandler = async (req, res) => {
+export const getPrivateChat: RequestHandler = async (req, res) => {
+  const user = req.user as UserWithIdentities
+  const id = req.params.id as string
+
+  const chat = await findPrivateChat(user.id, id)
+  const refined = refineChat(chat)
+  res.json(refined)
+}
+
+export const postMessage: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const chatId = req.params.id
 
@@ -41,7 +46,7 @@ export const postPrivateMessage: RequestHandler = async (req, res) => {
   }
 
   const { content } = matchedData<ContentData>(req)
-  const [message] = await createPrivateMessage(user.id, chatId, content)
+  const [message] = await createMessage(user.id, chatId, content)
   res.json(message)
 }
 

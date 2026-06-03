@@ -20,7 +20,8 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   if (err instanceof PrismaClientKnownRequestError) {
-    const error = new ServerError(err.message)
-    res.json(error)
+    console.log(err)
+    const error = new ServerError('Error occurred, try again later')
+    res.status(500).json(error)
   }
 }
