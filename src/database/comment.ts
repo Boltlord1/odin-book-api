@@ -21,6 +21,10 @@ export const createComment = (
     prisma.post.update({
       where: { id: postId },
       data: { commentCount: { increment: 1 } }
+    }),
+    prisma.user.update({
+      where: { id: authorId },
+      data: { commentCount: { increment: 1 } }
     })
   ])
 
@@ -31,16 +35,22 @@ export const deleteComment = (
 ) =>
   prisma.$transaction(async (tx) => {
     const { count } = await tx.comment.updateMany({
-      where: { id: commentId, authorId, postId, deleted: false },
-      data: { deleted: true }
+      where: { id: commentId, authorId, postId, deletedAt: null },
+      data: { authorId: null, content: null, deletedAt: new Date() }
     })
 
     const deleted = Boolean(count)
     if (deleted) {
-      await tx.post.update({
-        where: { id: postId },
-        data: { commentCount: { decrement: 1 } }
-      })
+      await tx.$transaction([
+        tx.post.update({
+          where: { id: postId },
+          data: { commentCount: { decrement: 1 } }
+        }),
+        tx.user.update({
+          where: { id: authorId },
+          data: { commentCount: { decrement: 1 } }
+        })
+      ])
     }
     return deleted
   })
@@ -63,7 +73,7 @@ export const findComments = (
 
   return prisma.comment.findMany({
     ...args,
-    where: { deleted: false, postId },
+    where: { postId, OR: [{ deletedAt: null }, { replyCount: { gt: 0 } }] },
     include: { author: true, likedBy: { where: { id: selfId } } },
     take: 10
   })

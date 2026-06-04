@@ -1,4 +1,5 @@
 import type { RequestHandler } from 'express'
+import { rollbackPost } from '../database/post'
 import type { UserWithIdentities } from '../database/user'
 import { updateSelf } from '../database/user'
 import { avatar, destroy, images, url } from '../lib/cloudinary'
@@ -59,6 +60,9 @@ export const uploadImages: RequestHandler = async (req: PostRequest, res) => {
 
   const result = await images(files)
   if (!Array.isArray(result)) {
+    const user = req.user as UserWithIdentities
+    const postId = req.postId as string
+    await rollbackPost(postId, user.id)
     res.status(502).json(result)
     return
   }

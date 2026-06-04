@@ -1,9 +1,7 @@
 import type { RequestHandler } from 'express'
 import { matchedData } from 'express-validator'
-import { deletePost, findPost, findPosts } from '../database/post'
+import { createPost, deletePost, findPost, findPosts } from '../database/post'
 import type { PossibleUser, UserWithIdentities } from '../database/user'
-import shortId from '../lib/cuid2'
-import prisma from '../lib/primsa'
 import { refineLike } from '../lib/refine'
 import { whitespace } from '../lib/variables'
 import parseQuery from '../routers/query'
@@ -14,10 +12,7 @@ export const postPost: RequestHandler = async (req: PostRequest, res, next) => {
   const user = req.user as UserWithIdentities
 
   const { title, content } = matchedData<PostData>(req)
-  const post = await prisma.post.create({
-    data: { id: shortId(), title, content: content || null, authorId: user.id },
-    select: { id: true }
-  })
+  const [post] = await createPost(user.id, title, content)
 
   const postId = post.id
   const files = req.files
@@ -80,10 +75,10 @@ export const delPost: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const id = req.params.id as string
 
-  const { count } = await deletePost(id, user.id)
-  if (!count) {
-    res.status(404).end()
+  const deleted = await deletePost(id, user.id)
+  if (deleted) {
+    res.status(200).end()
     return
   }
-  res.status(200).end()
+  res.status(404).end()
 }

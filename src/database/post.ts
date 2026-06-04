@@ -2,6 +2,7 @@ import type {
   PostFindManyArgs,
   PostWhereInput
 } from '../../generated/prisma/models'
+import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 
 interface Params {
@@ -12,8 +13,45 @@ interface Params {
   sort?: string
 }
 
+export const createPost = (authorId: string, title: string, content?: string) =>
+  prisma.$transaction([
+    prisma.post.create({
+      data: { id: shortId(), authorId, title, content: content || null },
+      select: { id: true }
+    }),
+    prisma.user.update({
+      where: { id: authorId },
+      data: { postCount: { increment: 1 } }
+    })
+  ])
+
+export const rollbackPost = (id: string, authorId: string) =>
+  prisma.user.update({
+    where: { id: authorId },
+    data: { posts: { delete: { id } }, postCount: { decrement: 1 } }
+  })
+
 export const deletePost = (id: string, authorId: string) =>
-  prisma.post.updateMany({ where: { id, authorId }, data: { deleted: true } })
+  prisma.$transaction(async (tx) => {
+    const { count } = await tx.post.updateMany({
+      where: { id, authorId, deletedAt: null },
+      data: {
+        title: null,
+        content: null,
+        authorId: null,
+        deletedAt: new Date()
+      }
+    })
+
+    const deleted = Boolean(count)
+    if (deleted) {
+      await prisma.user.update({
+        where: { id: authorId },
+        data: { postCount: { decrement: 1 } }
+      })
+    }
+    return deleted
+  })
 
 export const findPost = (id: string, { selfId }: Params) =>
   prisma.post.findUnique({
@@ -28,7 +66,7 @@ export const findPosts = ({
   selfId,
   sort
 }: Params) => {
-  const where: PostWhereInput = { deleted: false }
+  const where: PostWhereInput = { deletedAt: null }
   if (authorId) {
     where.authorId = authorId
   }
@@ -36,7 +74,7 @@ export const findPosts = ({
     where.OR = [
       { title: { search } },
       { content: { search } },
-      { comments: { some: { content: { search }, deleted: false } } }
+      { comments: { some: { content: { search } } } }
     ]
   }
 

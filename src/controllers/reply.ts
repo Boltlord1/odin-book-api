@@ -39,9 +39,9 @@ const delReply: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const postId = parseQuery(req.query.post)
   const commentId = parseQuery(req.query.comment)
-  const replyId = req.params.reply
+  const replyId = req.params.id as string
 
-  if (!(postId && commentId) || typeof replyId !== 'string') {
+  if (!(postId && commentId)) {
     res.status(400).end()
     return
   }

@@ -22,7 +22,7 @@ model User {
   name           String     @unique
   display        String
   avatar         String?
-  deleted        Boolean    @default(false)
+  deletedAt      DateTime?
   followingCount Int        @default(0)
   followerCount  Int        @default(0)
   postCount      Int        @default(0)
@@ -71,10 +71,10 @@ enum Provider {
 
 model Post {
   id           String    @id
-  title        String
+  title        String?
   content      String?
   createdAt    DateTime  @default(now())
-  deleted      Boolean   @default(false)
+  deletedAt    DateTime?
   likeCount    Int       @default(0)
   commentCount Int       @default(0)
   replyCount   Int       @default(0)
@@ -95,41 +95,41 @@ model Image {
 }
 
 model Comment {
-  id         String   @id
-  content    String
-  createdAt  DateTime @default(now())
-  deleted    Boolean  @default(false)
-  likeCount  Int      @default(0)
-  replyCount Int      @default(0)
-  author     User?    @relation(fields: [authorId], references: [id])
+  id         String    @id
+  content    String?
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+  likeCount  Int       @default(0)
+  replyCount Int       @default(0)
+  author     User?     @relation(fields: [authorId], references: [id])
   authorId   String?
-  post       Post     @relation(fields: [postId], references: [id])
+  post       Post      @relation(fields: [postId], references: [id])
   postId     String
   replies    Reply[]
-  likedBy    User[]   @relation("liked_comments")
+  likedBy    User[]    @relation("liked_comments")
 }
 
 model Reply {
-  id        String   @id
-  content   String
-  createdAt DateTime @default(now())
-  deleted   Boolean  @default(false)
-  likeCount Int      @default(0)
-  author    User?    @relation(fields: [authorId], references: [id])
+  id        String    @id
+  content   String?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  likeCount Int       @default(0)
+  author    User?     @relation(fields: [authorId], references: [id])
   authorId  String?
-  comment   Comment  @relation(fields: [commentId], references: [id])
+  comment   Comment   @relation(fields: [commentId], references: [id])
   commentId String
-  likedBy   User[]   @relation("liked_replies")
+  likedBy   User[]    @relation("liked_replies")
 }
 
 model Message {
-  id        String   @id
-  content   String
-  createdAt DateTime @default(now())
-  deleted   Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id])
+  id        String    @id
+  content   String?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  author    User      @relation(fields: [authorId], references: [id])
   authorId  String
-  chat      Chat     @relation(fields: [chatId], references: [id])
+  chat      Chat      @relation(fields: [chatId], references: [id])
   chatId    String
 }
 

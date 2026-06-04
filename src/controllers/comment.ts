@@ -34,9 +34,9 @@ const getComments: RequestHandler = async (req, res) => {
 const delComment: RequestHandler = async (req, res) => {
   const user = req.user as UserWithIdentities
   const postId = parseQuery(req.query.post)
-  const commentId = req.params.comment
+  const commentId = req.params.id as string
 
-  if (!postId || typeof commentId !== 'string') {
+  if (!postId) {
     res.status(400).end()
     return
   }
