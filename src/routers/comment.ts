@@ -1,5 +1,10 @@
 import { Router } from 'express'
-import { delComment, getComments, postComment } from '../controllers/comment'
+import {
+  delComment,
+  getComments,
+  getReplies,
+  postComment
+} from '../controllers/comment'
 import {
   validateBody,
   validateFinal,
@@ -21,5 +26,7 @@ router.post(
   validateFinal,
   postComment
 )
+
+router.get('/:id/reply', jwtOptional, getReplies)
 
 export default router

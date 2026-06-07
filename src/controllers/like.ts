@@ -2,19 +2,20 @@ import type { RequestHandler } from 'express'
 import type {
   CommentUpdateInput,
   PostUpdateInput,
-  ReplyUpdateInput
+  UserListRelationFilter
 } from '../../generated/prisma/models'
 import type { UserWithIdentities } from '../database/user'
 import prisma from '../lib/primsa'
 
-type type = 'post' | 'comment' | 'reply'
+type type = 'post' | 'comment'
 const updaters = {
-  post: (id: string, data: PostUpdateInput) =>
-    prisma.post.update({ where: { id }, data }),
-  comment: (id: string, data: CommentUpdateInput) =>
-    prisma.comment.update({ where: { id }, data }),
-  reply: (id: string, data: ReplyUpdateInput) =>
-    prisma.reply.update({ where: { id }, data })
+  post: (id: string, likedBy: UserListRelationFilter, data: PostUpdateInput) =>
+    prisma.post.update({ where: { id, likedBy }, data }),
+  comment: (
+    id: string,
+    likedBy: UserListRelationFilter,
+    data: CommentUpdateInput
+  ) => prisma.comment.update({ where: { id, likedBy }, data })
 }
 
 export const changeLike = (type: type, action: 'connect' | 'disconnect') => {
@@ -29,7 +30,11 @@ export const changeLike = (type: type, action: 'connect' | 'disconnect') => {
     const user = req.user as UserWithIdentities
     const likeCount = action === 'connect' ? { increment: 1 } : { decrement: 1 }
     const likedBy = { [action]: { id: user.id } }
-    await updaters[type](id, { likeCount, likedBy })
+    const filter =
+      action === 'connect'
+        ? { none: { id: user.id } }
+        : { some: { id: user.id } }
+    await updaters[type](id, filter, { likeCount, likedBy })
 
     res.status(202).send('Success')
   }

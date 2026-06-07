@@ -1,3 +1,5 @@
+import type { Prisma } from '../../generated/prisma/client'
+
 interface FollowParam {
   followerCount: number
   followers: unknown[]
@@ -20,6 +22,28 @@ export const refineLike = <T extends LikeParam>(obj: T) => {
   const liked = !!likedBy.length
   const likeCount = obj.likeCount - Number(liked)
   return { ...rest, liked, likeCount }
+}
+
+type CommentData = Prisma.CommentGetPayload<{
+  include: { author: true; likedBy: true; children: true }
+}>
+
+type RefinedComment = Omit<CommentData, 'likedBy' | 'children'> & {
+  liked: boolean
+  children: RefinedComment[]
+}
+
+export const refineComment = (obj: CommentData): RefinedComment => {
+  const { children, likedBy, ...rest } = obj
+
+  const refinedChildren = children
+    ? children.map((c) => refineComment(c as CommentData))
+    : []
+
+  const liked = !!likedBy.length
+  const likeCount = obj.likeCount - Number(liked)
+
+  return { ...rest, liked, likeCount, children: refinedChildren }
 }
 
 interface MessageParam {

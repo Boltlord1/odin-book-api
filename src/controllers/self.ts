@@ -10,7 +10,7 @@ import {
 } from '../database/user'
 import { ServerError } from '../lib/error'
 import prisma from '../lib/primsa'
-import parseQuery from '../routers/query'
+import parseQuery from '../lib/query'
 import type { EmailData, RegisterData, UpdateBody } from '../types/body'
 import type { EmailIdentity } from '../types/identity'
 import type { UserIdRequest } from '../types/request'

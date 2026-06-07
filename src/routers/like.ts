@@ -10,7 +10,4 @@ router.delete('/post/:id', jwt, changeLike('post', 'disconnect'))
 router.post('/comment/:id', jwt, changeLike('comment', 'connect'))
 router.delete('/comment/:id', jwt, changeLike('comment', 'disconnect'))
 
-router.post('/reply/:id', jwt, changeLike('reply', 'connect'))
-router.delete('/reply/:id', jwt, changeLike('reply', 'disconnect'))
-
 export default router

@@ -6,9 +6,9 @@ import {
   type PossibleUser,
   searchUsers
 } from '../database/user'
+import parseQuery from '../lib/query'
 import { refineLike } from '../lib/refine'
 import { whitespace } from '../lib/variables'
-import parseQuery from '../routers/query'
 
 export const getProfile: RequestHandler = async (req, res) => {
   const user = req.user as PossibleUser

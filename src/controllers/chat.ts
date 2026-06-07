@@ -8,8 +8,8 @@ import {
   hideChat
 } from '../database/chat'
 import type { UserWithIdentities } from '../database/user'
+import parseQuery from '../lib/query'
 import { refineChat } from '../lib/refine'
-import parseQuery from '../routers/query'
 import type { ContentData } from '../types/body'
 
 export const getChats: RequestHandler = async (req, res) => {

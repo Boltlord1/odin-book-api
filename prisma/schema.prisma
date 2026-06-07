@@ -27,17 +27,14 @@ model User {
   followerCount  Int        @default(0)
   postCount      Int        @default(0)
   commentCount   Int        @default(0)
-  replyCount     Int        @default(0)
   identities     Identity[]
   posts          Post[]     @relation("author")
   comments       Comment[]
-  replies        Reply[]
   messages       Message[]
   chats          Chat[]
   visibleChats   Chat[]     @relation("visible_chats")
   likedPosts     Post[]     @relation("liked_posts")
   likedComments  Comment[]  @relation("liked_comments")
-  likedReplies   Reply[]    @relation("liked_replies")
   following      User[]     @relation("follow")
   followers      User[]     @relation("follow")
   password       Password?
@@ -77,7 +74,6 @@ model Post {
   deletedAt    DateTime?
   likeCount    Int       @default(0)
   commentCount Int       @default(0)
-  replyCount   Int       @default(0)
   author       User?     @relation("author", fields: [authorId], references: [id])
   authorId     String?
   comments     Comment[]
@@ -100,26 +96,15 @@ model Comment {
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
   likeCount  Int       @default(0)
-  replyCount Int       @default(0)
+  childCount Int       @default(0)
   author     User?     @relation(fields: [authorId], references: [id])
   authorId   String?
   post       Post      @relation(fields: [postId], references: [id])
   postId     String
-  replies    Reply[]
+  parent     Comment?  @relation("thread", fields: [parentId], references: [id])
+  parentId   String?
+  children   Comment[] @relation("thread")
   likedBy    User[]    @relation("liked_comments")
-}
-
-model Reply {
-  id        String    @id
-  content   String?
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-  likeCount Int       @default(0)
-  author    User?     @relation(fields: [authorId], references: [id])
-  authorId  String?
-  comment   Comment   @relation(fields: [commentId], references: [id])
-  commentId String
-  likedBy   User[]    @relation("liked_replies")
 }
 
 model Message {

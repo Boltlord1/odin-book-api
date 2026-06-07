@@ -1,7 +1,7 @@
 import type { RequestHandler } from 'express'
 import pass from 'passport'
 import type { PossibleUser } from '../database/user'
-import parseQuery from '../routers/query'
+import parseQuery from '../lib/query'
 import githubStrategy from './github'
 import googleStrategy from './google'
 import jwtStrategy from './jwt'
