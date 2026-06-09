@@ -38,16 +38,12 @@ export const getComments: RequestHandler = async (req, res) => {
 }
 
 export const delComment: RequestHandler = async (req, res) => {
+  const postId = parseQuery(req.query.post) ?? ''
   const user = req.user as UserWithIdentities
-  const postId = parseQuery(req.query.post)
   const commentId = req.params.id as string
+  const parentId = parseQuery(req.query.parent) ?? null
 
-  if (!postId) {
-    res.status(400).end()
-    return
-  }
-
-  const deleted = await deleteComment(postId, commentId, user.id)
+  const deleted = await deleteComment(postId, commentId, user.id, parentId)
   if (deleted) {
     res.status(200).end()
     return

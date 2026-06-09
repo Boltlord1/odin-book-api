@@ -101,7 +101,7 @@ model Comment {
   authorId   String?
   post       Post      @relation(fields: [postId], references: [id])
   postId     String
-  parent     Comment?  @relation("thread", fields: [parentId], references: [id])
+  parent     Comment?  @relation("thread", fields: [parentId], references: [id], onDelete: Cascade)
   parentId   String?
   children   Comment[] @relation("thread")
   likedBy    User[]    @relation("liked_comments")

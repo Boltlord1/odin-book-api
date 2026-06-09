@@ -1,4 +1,7 @@
-import type { CommentFindManyArgs } from '../../generated/prisma/models'
+import type {
+  CommentFindManyArgs,
+  CommentWhereInput
+} from '../../generated/prisma/models'
 import shortId from '../lib/cuid2'
 import prisma from '../lib/primsa'
 
@@ -45,36 +48,62 @@ export const deleteComment = (
   postId: string,
   commentId: string,
   authorId: string,
-  parentId?: string
+  parentId: string | null
 ) =>
   prisma.$transaction(async (tx) => {
-    const { count } = await tx.comment.updateMany({
-      where: { id: commentId, authorId, postId, parentId, deletedAt: null },
-      data: { authorId: null, content: null, deletedAt: new Date() }
+    const comment = await tx.comment.findUnique({
+      where: { id: commentId, authorId, postId, parentId, deletedAt: null }
     })
 
-    const deleted = Boolean(count)
-    if (deleted) {
-      await tx.$transaction([
-        tx.post.update({
-          where: { id: postId },
-          data: { commentCount: { decrement: 1 } }
-        }),
-        tx.user.update({
-          where: { id: authorId },
-          data: { commentCount: { decrement: 1 } }
-        }),
-        ...(parentId
-          ? [
-              tx.comment.update({
-                where: { id: parentId },
-                data: { childCount: { decrement: 1 } }
-              })
-            ]
-          : [])
-      ])
+    if (!comment) {
+      return false
     }
-    return deleted
+
+    await tx.user.update({
+      where: { id: comment.authorId as string },
+      data: { commentCount: { decrement: 1 } }
+    })
+
+    if (comment.childCount > 0) {
+      await tx.comment.update({
+        where: { id: comment.id },
+        data: { authorId: null, content: null, deletedAt: new Date() }
+      })
+    } else {
+      let postDecrement = 1
+
+      if (parentId) {
+        let parent = await tx.comment.update({
+          where: { id: parentId },
+          data: {
+            childCount: { decrement: 1 },
+            children: { delete: { id: commentId } }
+          }
+        })
+        while (parent.deletedAt && parent.childCount === 0) {
+          postDecrement++
+          if (!parent.parentId) {
+            await tx.comment.delete({ where: { id: parent.id } })
+            break
+          }
+          parent = await tx.comment.update({
+            where: { id: parent.parentId },
+            data: {
+              childCount: { decrement: 1 },
+              children: { delete: { id: parent.id } }
+            }
+          })
+        }
+      } else {
+        await tx.comment.delete({ where: { id: comment.id } })
+      }
+
+      await tx.post.update({
+        where: { id: postId },
+        data: { commentCount: { decrement: postDecrement } }
+      })
+    }
+    return true
   })
 
 export const findComments = (
@@ -93,7 +122,18 @@ export const findComments = (
     args.orderBy = [{ createdAt: 'desc' }, { id: 'asc' }]
   }
 
-  const where = { OR: [{ deletedAt: null }, { children: { some: {} } }] }
+  const OR: CommentWhereInput[] = [
+    { deletedAt: null },
+    { childCount: { gt: 0 } }
+  ]
+
+  const where: CommentWhereInput = {
+    OR: [
+      ...OR,
+      { children: { some: { OR } } },
+      { children: { some: { children: { some: { OR } } } } }
+    ]
+  }
 
   return prisma.comment.findMany({
     ...args,
@@ -158,7 +198,18 @@ export const findReplies = (
     args.orderBy = [{ createdAt: 'desc' }, { id: 'asc' }]
   }
 
-  const where = { OR: [{ deletedAt: null }, { children: { some: {} } }] }
+  const OR: CommentWhereInput[] = [
+    { deletedAt: null },
+    { childCount: { gt: 0 } }
+  ]
+
+  const where: CommentWhereInput = {
+    OR: [
+      ...OR,
+      { children: { some: { OR } } },
+      { children: { some: { children: { some: { OR } } } } }
+    ]
+  }
 
   return prisma.comment.findMany({
     ...args,
@@ -169,8 +220,30 @@ export const findReplies = (
       children: {
         where,
         orderBy: args.orderBy,
-        take: 3,
-        include: { author: true, likedBy: { where: { id: selfId } } }
+        take: 2,
+        include: {
+          author: true,
+          likedBy: { where: { id: selfId } },
+          children: {
+            where,
+            orderBy: args.orderBy,
+            take: 2,
+            include: {
+              author: true,
+              likedBy: { where: { id: selfId } },
+              children: {
+                where,
+                orderBy: args.orderBy,
+                take: 2,
+                include: {
+                  author: true,
+                  likedBy: { where: { id: selfId } },
+                  children: { where, orderBy: args.orderBy, take: 2 }
+                }
+              }
+            }
+          }
+        }
       }
     },
     take: 5
