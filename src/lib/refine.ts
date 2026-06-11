@@ -31,6 +31,7 @@ type CommentData = Prisma.CommentGetPayload<{
 type RefinedComment = Omit<CommentData, 'likedBy' | 'children'> & {
   liked: boolean
   children: RefinedComment[]
+  collapsed: boolean
 }
 
 export const refineComment = (obj: CommentData): RefinedComment => {
@@ -42,8 +43,9 @@ export const refineComment = (obj: CommentData): RefinedComment => {
 
   const liked = !!likedBy.length
   const likeCount = obj.likeCount - Number(liked)
+  const collapsed = false
 
-  return { ...rest, liked, likeCount, children: refinedChildren }
+  return { ...rest, liked, likeCount, collapsed, children: refinedChildren }
 }
 
 interface MessageParam {
