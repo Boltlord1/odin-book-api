@@ -8,6 +8,7 @@ import {
 import type { PossibleUser } from '../database/user'
 import { ClientError } from '../lib/error'
 import prisma from '../lib/primsa'
+import { API_URL } from '../lib/variables'
 import type { Unverified, Verified } from '../types/case'
 import type { GoogleIdentity } from '../types/identity'
 
@@ -17,7 +18,7 @@ const clientSecret = `${process.env.GOOGLE_SECRET}`
 const options: StrategyOptionsWithRequest = {
   clientID,
   clientSecret,
-  callbackURL: 'http://localhost:3000/auth/google/callback',
+  callbackURL: `${API_URL}/auth/google/callback`,
   passReqToCallback: true
 }
 

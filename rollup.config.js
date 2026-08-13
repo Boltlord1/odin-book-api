@@ -4,7 +4,7 @@ import nodeExternals from 'rollup-plugin-node-externals'
 
 export default {
   input: 'src/app.ts',
-  output: { file: 'dist/app.js', format: 'esm' },
+  output: { file: 'dist/app.js', format: 'cjs' },
   plugins: [
     typescript(),
     nodeExternals(),
