@@ -8,6 +8,7 @@ import type { VerifyCallback, VerifyFunctionWithRequest } from 'passport-oauth2'
 import type { PossibleUser } from '../database/user'
 import { ClientError } from '../lib/error'
 import prisma from '../lib/primsa'
+import { API_URL } from '../lib/variables'
 import type { Unverified, Verified } from '../types/case'
 import type { GithubIdentity } from '../types/identity'
 
@@ -17,7 +18,7 @@ const clientSecret = `${process.env.GITHUB_SECRET}`
 const options: StrategyOptionsWithRequest = {
   clientID,
   clientSecret,
-  callbackURL: 'http://localhost:3000/auth/github/callback',
+  callbackURL: `${API_URL}/auth/github/callback`,
   passReqToCallback: true
 }
 
